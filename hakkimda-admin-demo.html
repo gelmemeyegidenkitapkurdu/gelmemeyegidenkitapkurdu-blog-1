@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hakkımda - Admin Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 50%, #e1c9ff 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .top-nav {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(147, 51, 234, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #9333ea;
+            text-decoration: none;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #9333ea;
+            border: 2px solid #9333ea;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #9333ea, #ec4899);
+            color: white;
+            text-align: center;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .page-description {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .admin-controls {
+            background: white;
+            padding: 1.5rem;
+            margin: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(147, 51, 234, 0.1);
+            border: 2px solid #e1c9ff;
+        }
+
+        .admin-controls h3 {
+            color: #9333ea;
+            margin-bottom: 1rem;
+        }
+
+        .main-content {
+            background: white;
+            margin: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.15);
+            padding: 2rem;
+        }
+
+        .profile-demo {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        .profile-image-demo {
+            text-align: center;
+        }
+
+        .demo-avatar {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+            margin: 0 auto 1.5rem;
+            border: 5px solid #9333ea;
+        }
+
+        .profile-info h2 {
+            color: #9333ea;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-title {
+            color: #ec4899;
+            font-size: 1.2rem;
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .profile-bio {
+            color: #333;
+            line-height: 1.8;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .contact-section {
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 100%);
+            padding: 2rem;
+            margin: 2rem;
+            border-radius: 15px;
+            border: 2px solid #e1c9ff;
+        }
+
+        .contact-section h3 {
+            color: #9333ea;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .contact-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 2px solid #e1c9ff;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .contact-item:hover {
+            border-color: #9333ea;
+            transform: translateY(-2px);
+        }
+
+        .contact-icon {
+            font-size: 1.5rem;
+            color: #9333ea;
+        }
+
+        .contact-info {
+            flex: 1;
+        }
+
+        .contact-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .contact-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .social-section {
+            background: white;
+            padding: 2rem;
+            margin: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(147, 51, 234, 0.1);
+            border: 2px solid #e1c9ff;
+        }
+
+        .social-section h3 {
+            color: #9333ea;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        .demo-note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 2rem;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .profile-demo {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                text-align: center;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                margin: 1rem;
+            }
+
+            .demo-avatar {
+                width: 200px;
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Üst Navigasyon -->
+    <nav class="top-nav">
+        <a href="index.html" class="logo">📚 Kitap Kurdu</a>
+        <div class="auth-buttons">
+            <a href="index.html" class="btn btn-secondary">Ana Sayfa</a>
+            <a href="admin-panel.html" class="btn btn-primary">🔧 Admin Panel</a>
+            <a href="#" class="btn btn-secondary" onclick="alert('Demo sayfası - çıkış işlemi simülasyonu')">Çıkış Yap</a>
+        </div>
+    </nav>
+
+    <!-- Sayfa Başlığı -->
+    <header class="page-header">
+        <h1 class="page-title">👤 Hakkımda</h1>
+        <p class="page-description">Blog sahibi hakkında bilgiler ve iletişim</p>
+    </header>
+
+    <!-- Demo Uyarısı -->
+    <div class="demo-note">
+        <strong>📋 Admin Demo Sayfası:</strong> Bu sayfa admin girişi yapıldıktan sonra hakkımda sayfasının nasıl görüneceğini gösterir.
+    </div>
+
+    <!-- Admin Kontrolleri -->
+    <div class="admin-controls">
+        <h3>Admin Kontrolleri</h3>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="alert('Profil düzenleme modalı açılacak')">
+                ✏️ Bilgilerimi Düzenle
+            </button>
+            <button class="btn btn-secondary" onclick="alert('Profil temizleme işlemi yapılacak')">
+                🗑️ Profili Temizle
+            </button>
+            <button class="btn btn-secondary" onclick="showPreview()">
+                👁️ Önizleme
+            </button>
+            <a href="hakkimda.html" class="btn btn-secondary">
+                🔗 Gerçek Sayfayı Aç
+            </a>
+        </div>
+    </div>
+
+    <!-- Ana İçerik -->
+    <main class="main-content">
+        <!-- Profil Bölümü -->
+        <div class="profile-demo">
+            <div class="profile-image-demo">
+                <div class="demo-avatar">👤</div>
+            </div>
+            
+            <div class="profile-info">
+                <h2>Gelmemeyegiden Kitap Kurdu</h2>
+                <p class="profile-title">Kitap Blogger & Yazar</p>
+                <div class="profile-bio">
+                    Merhaba! Ben bir kitap tutkunu ve bu blogda kitaplar hakkında düşüncelerimi, 
+                    incelemelerimi ve röportajlarımı paylaşıyorum. Kitapların büyülü dünyasında 
+                    size eşlik etmek için buradayım. Okuma keyfinizi artıracak öneriler ve 
+                    keyifli sohbetler için beni takip etmeyi unutmayın!
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- İletişim Bölümü -->
+    <section class="contact-section">
+        <h3>📞 İletişim Bilgileri</h3>
+        <div class="contact-grid">
+            <div class="contact-item">
+                <div class="contact-icon">📧</div>
+                <div class="contact-info">
+                    <div class="contact-label">E-mail</div>
+                    <div class="contact-value">gelmemeyegidenkitapkurdu@gmail.com</div>
+                </div>
+            </div>
+            <div class="contact-item">
+                <div class="contact-icon">📞</div>
+                <div class="contact-info">
+                    <div class="contact-label">Telefon</div>
+                    <div class="contact-value">+90 555 123 4567</div>
+                </div>
+            </div>
+            <div class="contact-item">
+                <div class="contact-icon">💬</div>
+                <div class="contact-info">
+                    <div class="contact-label">WhatsApp</div>
+                    <div class="contact-value">+90 555 999 8888</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sosyal Medya Bölümü -->
+    <section class="social-section">
+        <h3>🌐 Sosyal Medya</h3>
+        <div class="social-links">
+            <a href="#" class="social-link">
+                <span>📷</span>
+                <span>Instagram</span>
+            </a>
+            <a href="#" class="social-link">
+                <span>🎵</span>
+                <span>TikTok</span>
+            </a>
+            <a href="#" class="social-link">
+                <span>🐦</span>
+                <span>Twitter</span>
+            </a>
+            <a href="#" class="social-link">
+                <span>📹</span>
+                <span>YouTube</span>
+            </a>
+        </div>
+    </section>
+
+    <script>
+        function showPreview() {
+            alert(`Profil Önizleme:
+
+İsim: Gelmemeyegiden Kitap Kurdu
+Unvan: Kitap Blogger & Yazar
+Biyografi: Merhaba! Ben bir kitap tutkunu ve bu blogda kitaplar hakkında...
+E-mail: gelmemeyegidenkitapkurdu@gmail.com
+Telefon: +90 555 123 4567
+WhatsApp: +90 555 999 8888
+
+Sosyal Medya: Instagram, TikTok, Twitter, YouTube`);
+        }
+    </script>
+</body>
+</html>

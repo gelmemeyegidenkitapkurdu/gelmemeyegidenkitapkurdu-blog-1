@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Röportaj Düzenleme Test</title>
+</head>
+<body>
+    <h1>Röportaj düzenleme testi...</h1>
+    <script>
+        // Admin durumunu localStorage'a kaydet
+        localStorage.setItem('isAdminLoggedIn', 'true');
+        localStorage.setItem('adminEmail', 'gelmemeyegidenkitapkurdu@gmail.com');
+        
+        // 1 saniye sonra röportaj sayfasına yönlendir
+        setTimeout(function() {
+            window.location.href = 'roportaj-detail.html?id=6';
+        }, 1000);
+        
+        // 3 saniye sonra düzenle butonuna tıkla
+        setTimeout(function() {
+            const editBtn = document.getElementById('editInterviewBtn');
+            if (editBtn) {
+                editBtn.click();
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

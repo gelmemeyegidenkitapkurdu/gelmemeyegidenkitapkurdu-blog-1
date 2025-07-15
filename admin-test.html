@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Test - Hakkımda</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 50%, #e1c9ff 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+        }
+        .btn-secondary {
+            background: #ddd;
+            color: #333;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #9333ea;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1c9ff;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px solid #e1c9ff;
+            border-radius: 10px;
+        }
+        .test-section h3 {
+            color: #9333ea;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: #9333ea; text-align: center;">🧪 Hakkımda Sayfa Admin Test</h1>
+        
+        <div class="test-section">
+            <h3>1️⃣ Admin Giriş Testi</h3>
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label>Admin E-mail:</label>
+                    <input type="email" id="adminEmail" value="gelmemeyegidenkitapkurdu@gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Admin Şifre:</label>
+                    <input type="password" id="adminPassword" value="Elif.6628.Akin" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Admin Girişi Test Et</button>
+                <button type="button" class="btn btn-secondary" onclick="logoutTest()">Çıkış Yap</button>
+            </form>
+            <div id="loginStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2️⃣ Profil Bilgileri Testi</h3>
+            <button class="btn btn-primary" onclick="testGetProfile()">Profil Bilgilerini Getir</button>
+            <div id="profileStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3️⃣ Profil Ekleme/Güncelleme Testi</h3>
+            <form id="profileTestForm">
+                <div class="form-group">
+                    <label>İsim:</label>
+                    <input type="text" id="testName" value="Test Admin" required>
+                </div>
+                <div class="form-group">
+                    <label>Unvan:</label>
+                    <input type="text" id="testTitle" value="Blog Yazarı">
+                </div>
+                <div class="form-group">
+                    <label>Biyografi:</label>
+                    <textarea id="testBio">Bu bir test biyografisidir. Kitap sevgisi ve yazma tutkusu burada başladı.</textarea>
+                </div>
+                <div class="form-group">
+                    <label>E-mail:</label>
+                    <input type="email" id="testEmail" value="test@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Telefon:</label>
+                    <input type="tel" id="testPhone" value="+90 555 123 4567">
+                </div>
+                <div class="form-group">
+                    <label>Instagram:</label>
+                    <input type="url" id="testInstagram" value="https://instagram.com/kitapkurdu">
+                </div>
+                <button type="submit" class="btn btn-primary">Profil Bilgilerini Kaydet</button>
+            </form>
+            <div id="updateStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4️⃣ Hakkımda Sayfasını Aç</h3>
+            <button class="btn btn-primary" onclick="window.open('hakkimda.html', '_blank')">Hakkımda Sayfasını Aç</button>
+            <p><strong>Test adımları:</strong></p>
+            <ol>
+                <li>Yukarıda admin girişi yapın</li>
+                <li>Profil bilgilerini kaydedin</li>
+                <li>Hakkımda sayfasını açın</li>
+                <li>Admin kontrolleri ve "Profil Düzenle" butonunun görünür olduğunu kontrol edin</li>
+                <li>Profil bilgilerinin doğru şekilde gösterildiğini kontrol edin</li>
+            </ol>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script>
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSupabase();
+            checkCurrentSession();
+        });
+
+        // Mevcut oturumu kontrol et
+        async function checkCurrentSession() {
+            const isAdmin = localStorage.getItem('isAdminLoggedIn') === 'true';
+            const adminEmail = localStorage.getItem('adminEmail');
+            
+            if (isAdmin && adminEmail) {
+                showStatus('loginStatus', `✅ Admin oturumu açık: ${adminEmail}`, 'success');
+            } else {
+                showStatus('loginStatus', '❌ Admin oturumu bulunamadı', 'info');
+            }
+        }
+
+        // Admin giriş testi
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            showStatus('loginStatus', '⏳ Admin girişi test ediliyor...', 'info');
+            
+            try {
+                // Önce admin kullanıcısını kayıt et (eğer yoksa)
+                const signUpResult = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                });
+                
+                console.log('SignUp sonucu:', signUpResult);
+                
+                // Sonra giriş yap
+                const loginResult = await loginAsAdmin(email, password);
+                
+                if (loginResult.success) {
+                    showStatus('loginStatus', '✅ Admin girişi başarılı!', 'success');
+                    checkCurrentSession();
+                } else {
+                    showStatus('loginStatus', `❌ Admin girişi başarısız: ${loginResult.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Admin giriş test hatası:', error);
+                showStatus('loginStatus', `❌ Hata: ${error.message}`, 'error');
+            }
+        });
+
+        // Çıkış testi
+        async function logoutTest() {
+            try {
+                await logout();
+                showStatus('loginStatus', '✅ Çıkış yapıldı', 'success');
+                checkCurrentSession();
+            } catch (error) {
+                showStatus('loginStatus', `❌ Çıkış hatası: ${error.message}`, 'error');
+            }
+        }
+
+        // Profil getirme testi
+        async function testGetProfile() {
+            showStatus('profileStatus', '⏳ Profil bilgileri getiriliyor...', 'info');
+            
+            try {
+                const profile = await getProfile();
+                
+                if (profile) {
+                    showStatus('profileStatus', `✅ Profil bulundu: ${JSON.stringify(profile, null, 2)}`, 'success');
+                } else {
+                    showStatus('profileStatus', '❌ Profil bulunamadı', 'error');
+                }
+            } catch (error) {
+                showStatus('profileStatus', `❌ Profil getirme hatası: ${error.message}`, 'error');
+            }
+        }
+
+        // Profil güncelleme testi
+        document.getElementById('profileTestForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            showStatus('updateStatus', '⏳ Profil bilgileri kaydediliyor...', 'info');
+            
+            try {
+                const profileData = {
+                    name: document.getElementById('testName').value,
+                    title: document.getElementById('testTitle').value,
+                    bio: document.getElementById('testBio').value,
+                    email: document.getElementById('testEmail').value,
+                    phone: document.getElementById('testPhone').value,
+                    instagram: document.getElementById('testInstagram').value,
+                    custom_contact_type: 'whatsapp',
+                    custom_contact_value: '+90 555 999 8888'
+                };
+                
+                const result = await updateProfile(profileData);
+                
+                if (result !== null) {
+                    showStatus('updateStatus', '✅ Profil bilgileri başarıyla kaydedildi!', 'success');
+                    // Profili yeniden getir ve göster
+                    setTimeout(testGetProfile, 1000);
+                } else {
+                    showStatus('updateStatus', '❌ Profil kaydetme başarısız', 'error');
+                }
+            } catch (error) {
+                console.error('Profil kaydetme hatası:', error);
+                showStatus('updateStatus', `❌ Hata: ${error.message}`, 'error');
+            }
+        });
+
+        // Durum mesajı gösterme yardımcı fonksiyonu
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+    </script>
+</body>
+</html>

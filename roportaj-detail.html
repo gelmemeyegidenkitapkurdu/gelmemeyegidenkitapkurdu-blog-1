@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Röportaj - Gelmemeyegiden Kitap Kurdu</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 50%, #e1c9ff 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Header Navigation */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(147, 51, 234, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            margin: 0;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.5rem 0;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #9333ea;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            border-radius: 1px;
+        }
+
+        /* Container */
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Interview Header */
+        .interview-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(147, 51, 234, 0.1);
+        }
+
+        .interview-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #9333ea;
+            margin-bottom: 1rem;
+        }
+
+        .interview-description {
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .participants {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .participant {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #9333ea;
+            font-weight: 500;
+        }
+
+        /* Chat Container - WhatsApp Style */
+        .chat-container {
+            background: #f5f5f5;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        /* Message Bubbles */
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 75%;
+            word-wrap: break-word;
+        }
+
+        .message.interviewer {
+            align-self: flex-start;
+        }
+
+        .message.guest {
+            align-self: flex-end;
+        }
+
+        .message-bubble {
+            padding: 1rem 1.5rem;
+            border-radius: 18px;
+            font-size: 1rem;
+            line-height: 1.5;
+            position: relative;
+            margin-bottom: 0.3rem;
+        }
+
+        /* Interviewer Messages (Purple) */
+        .message.interviewer .message-bubble {
+            background: #9333ea;
+            color: white;
+            border-bottom-left-radius: 8px;
+        }
+
+        /* Guest Messages (Pink) */
+        .message.guest .message-bubble {
+            background: #ec4899;
+            color: white;
+            border-bottom-right-radius: 8px;
+        }
+
+        .message-sender {
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+            opacity: 0.8;
+        }
+
+        .message.interviewer .message-sender {
+            color: #9333ea;
+            align-self: flex-start;
+        }
+
+        .message.guest .message-sender {
+            color: #ec4899;
+            align-self: flex-end;
+        }
+
+        /* Loading States */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #ef4444;
+            background: #fee2e2;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+
+        /* Back Button */
+        .back-button {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 0 auto 2rem auto;
+            display: block;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        /* Admin Control Buttons */
+        .admin-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .edit-btn {
+            background: #3b82f6;
+        }
+        
+        .edit-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .delete-btn {
+            background: #ef4444;
+        }
+        
+        .delete-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #999;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .confirm-message {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .interview-title-preview {
+            font-weight: bold;
+            color: #9333ea;
+            font-size: 1.2rem;
+            padding: 1rem;
+            background: #f8f4ff;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .cancel-btn {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-btn:hover {
+            background: #4b5563;
+        }
+
+        .confirm-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .confirm-btn:hover {
+            background: #dc2626;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #9333ea;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        /* Error/Success Messages */
+        .error-message {
+            background: #ffeaa7;
+            color: #d63031;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            border: 2px solid #fdcb6e;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            border: 2px solid #c3e6cb;
+            display: none;
+        }
+
+        /* Loading indicator */
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+            color: #9333ea;
+        }
+
+        .loading-indicator.show {
+            display: block;
+        }
+
+        /* Participants section */
+        .participants-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+            border: 2px solid #e9ecef;
+        }
+
+        .participants-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #9333ea;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .participants-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .participant-item {
+            background: white;
+            padding: 1.2rem;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .participant-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .participant-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .interviewer-icon {
+            background: #9333ea;
+        }
+
+        .guest-icon {
+            background: #ec4899;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem auto;
+                padding: 0 0.5rem;
+            }
+
+            .interview-header {
+                padding: 1.5rem;
+            }
+
+            .interview-title {
+                font-size: 1.5rem;
+            }
+
+            .participants {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .chat-container {
+                padding: 1rem;
+            }
+
+            .message {
+                max-width: 85%;
+            }
+
+            .nav-menu {
+                gap: 1rem;
+            }
+
+            .header {
+                padding: 0.8rem 1rem;
+            }
+            
+            .participants-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .admin-controls {
+                flex-direction: column;
+            }
+            
+            .cover-image-title {
+                font-size: 1.1rem;
+            }
+            
+            .image-modal-close {
+                top: 10px;
+                right: 15px;
+                font-size: 1.5rem;
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        /* Cover Image Section */
+        .cover-image-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px dashed #e0e0e0;
+        }
+
+        .cover-image-wrapper {
+            text-align: center;
+        }
+
+        .cover-image-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #9333ea;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .cover-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(147, 51, 234, 0.15);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .cover-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 40px rgba(147, 51, 234, 0.2);
+        }
+
+        /* Image Modal for Full Screen View */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .image-modal.show {
+            display: flex;
+        }
+
+        .image-modal img {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.5);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .image-modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Custom Scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #9333ea;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #7c3aed;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                📚 Kitap Kurdu
+            </a>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="index.html" class="nav-link">🏠 Ana Sayfa</a></li>
+                    <li><a href="yazilar.html" class="nav-link">✍️ Yazılar</a></li>
+                    <li><a href="anketler.html" class="nav-link">📊 Anketler</a></li>
+                    <li><a href="kitaplar.html" class="nav-link">📚 Kitaplar</a></li>
+                    <li><a href="roportaj.html" class="nav-link active">🎤 Röportaj</a></li>
+                    <li><a href="hakkimda.html" class="nav-link">👤 Hakkımda</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <a href="roportaj.html" class="back-button">← Röportajlara Dön</a>
+        
+        <div id="loadingMessage" class="loading">
+            Röportaj yükleniyor...
+        </div>
+
+        <div id="errorMessage" class="error" style="display: none;">
+            Röportaj yüklenirken bir hata oluştu.
+        </div>
+
+        <!-- Admin Kontrol Butonları -->
+        <div id="adminControls" class="admin-controls" style="display: none;">
+            <button id="editInterviewBtn" class="admin-btn edit-btn">
+                ✏️ Düzenle
+            </button>
+            <button id="deleteInterviewBtn" class="admin-btn delete-btn">
+                🗑️ Sil
+            </button>
+        </div>
+
+        <div id="interviewContent" style="display: none;">
+            <!-- Interview header will be populated by JavaScript -->
+            <div id="interviewHeader" class="interview-header"></div>
+            
+            <!-- Chat container -->
+            <div class="chat-container">
+                <div id="chatMessages" class="chat-messages">
+                    <!-- Messages will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Kapak Resmi - Röportaj Sonunda -->
+            <div id="coverImageSection" class="cover-image-section" style="display: none;">
+                <div class="cover-image-wrapper">
+                    <h3 class="cover-image-title">📸 Röportaj Kapak Resmi</h3>
+                    <img id="coverImage" src="" alt="Röportaj Kapak Resmi" class="cover-image">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Modal for Full Screen View -->
+    <div id="imageModal" class="image-modal">
+        <div class="image-modal-close" onclick="closeImageModal()">&times;</div>
+        <img id="fullscreenImage" src="" alt="Tam Boyut Resim">
+    </div>
+    
+    <!-- Silme Onay Modalı -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🗑️ Röportajı Sil</h2>
+                <button class="close-btn" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="confirm-message">Bu röportajı ve tüm mesajlarını silmek istediğinize emin misiniz? Bu işlem geri alınamaz!</p>
+                <div class="interview-title-preview"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn" onclick="closeDeleteModal()">İptal</button>
+                <button class="confirm-btn" id="confirmDeleteBtn">Evet, Sil</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Düzenleme Modalı -->
+    <div id="editInterviewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">✏️ Röportajı Düzenle</h2>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            
+            <!-- Error/Success Messages -->
+            <div id="editErrorMessage" class="error-message"></div>
+            <div id="editSuccessMessage" class="success-message"></div>
+            <div id="editLoadingIndicator" class="loading-indicator">📝 Röportaj güncelleniyor...</div>
+            
+            <form id="editInterviewForm" onsubmit="updateInterview(event)">
+                <!-- Röportaj Başlığı -->
+                <div class="form-group">
+                    <label class="form-label">Röportaj Başlığı</label>
+                    <input type="text" id="editInterviewTitle" class="form-input" required
+                           placeholder="Röportajın başlığını yazın..." maxlength="100">
+                </div>
+
+                <!-- Röportajın Kısa Tanımı -->
+                <div class="form-group">
+                    <label class="form-label">Röportajın Kısa Tanımı</label>
+                    <textarea id="editInterviewDesc" class="form-textarea" required
+                              placeholder="Bu röportajın kısa açıklamasını yazın..."></textarea>
+                </div>
+
+                <!-- Röportaj Katılımcıları -->
+                <div class="participants-section">
+                    <div class="participants-title">
+                        <span>👥</span>
+                        Röportaj Katılımcıları
+                    </div>
+                    <div class="participants-grid">
+                        <div class="participant-item">
+                            <div class="participant-label">
+                                <div class="participant-icon interviewer-icon">R</div>
+                                Röportaj Yapan Kişi:
+                            </div>
+                            <input type="text" id="editInterviewerName" class="form-input" required 
+                                   placeholder="Röportaj yapan kişinin adı">
+                        </div>
+                        <div class="participant-item">
+                            <div class="participant-label">
+                                <div class="participant-icon guest-icon">K</div>
+                                Röportaj Yapılan Kişi:
+                            </div>
+                            <input type="text" id="editGuestName" class="form-input" required 
+                                   placeholder="Röportaj yapılan kişinin adı">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Taslak / Yayınla Seçimi -->
+                <div class="form-group">
+                    <label class="form-label">Röportaj Durumu</label>
+                    <div style="display: flex; gap: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="editStatus" id="editStatusDraft" value="draft" style="margin: 0;">
+                            📝 Taslak olarak kaydet
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="editStatus" id="editStatusPublished" value="published" style="margin: 0;">
+                            ✅ Yayınla
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Diyaloglar -->
+                <div class="form-group">
+                    <label class="form-label">Röportaj Diyalogları</label>
+                    <div id="editDialogContainer" class="dialog-form">
+                        <!-- Diyaloglar JavaScript ile doldurulacak -->
+                    </div>
+                    
+                    <button type="button" class="add-dialog-btn" onclick="addEditDialog()">
+                        ➕ Yeni Diyalog Ekle
+                    </button>
+                </div>
+
+                <!-- Form Actions -->
+                <div style="display: flex; gap: 1rem; justify-content: space-between; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">İptal</button>
+                    <button type="submit" class="btn" id="editSubmitBtn">Röportajı Güncelle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script>
+        let interviewId = null;
+        let interview = null;
+        let messages = [];
+        let isAdmin = false;
+
+        // URL'den röportaj ID'sini al
+        function getInterviewIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+
+        // Röportaj detaylarını yükle
+        async function loadInterview() {
+            try {
+                interviewId = getInterviewIdFromUrl();
+                
+                if (!interviewId) {
+                    showError('Röportaj ID\'si bulunamadı.');
+                    return;
+                }
+
+                // Röportaj bilgilerini al
+                const interviewData = await getWhatsAppInterview(interviewId);
+                if (!interviewData) {
+                    showError('Röportaj bulunamadı.');
+                    return;
+                }
+
+                interview = interviewData;
+
+                // Mesajları al
+                const messagesData = await getWhatsAppMessages(interviewId);
+                messages = messagesData || [];
+
+                // İçeriği göster
+                displayInterview();
+                displayMessages();
+                displayCoverImage(); // Kapak resmini sonda göster
+                
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('interviewContent').style.display = 'block';
+
+                // Admin kontrolü
+                if (isAdmin) {
+                    document.getElementById('adminControls').style.display = 'flex';
+                    setupAdminControls();
+                }
+
+            } catch (error) {
+                console.error('Röportaj yükleme hatası:', error);
+                showError('Röportaj yüklenirken bir hata oluştu.');
+            }
+        }
+
+        // Röportaj başlığını göster
+        function displayInterview() {
+            const headerElement = document.getElementById('interviewHeader');
+            
+            headerElement.innerHTML = `
+                <h1 class="interview-title">${interview.title}</h1>
+                <p class="interview-description">${interview.description || ''}</p>
+                <div class="participants">
+                    <div class="participant">
+                        <span>🎤 ${interview.interviewer_name}</span>
+                    </div>
+                    <div class="participant">
+                        <span>⚡ ${interview.guest_name}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Mesajları göster
+        function displayMessages() {
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.innerHTML = '';
+
+            if (messages.length === 0) {
+                messagesContainer.innerHTML = '<div class="loading">Henüz mesaj yok.</div>';
+                return;
+            }
+
+            messages.forEach(message => {
+                const messageElement = createMessageElement(message);
+                messagesContainer.appendChild(messageElement);
+            });
+
+            // En alta scroll yap
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Mesaj elementi oluştur
+        function createMessageElement(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${message.sender_type}`;
+
+            const senderName = message.sender_type === 'interviewer' ? interview.interviewer_name : interview.guest_name;
+            
+            messageDiv.innerHTML = `
+                <div class="message-sender">${senderName}</div>
+                <div class="message-bubble">${message.content}</div>
+            `;
+
+            return messageDiv;
+        }
+
+        // Kapak resmini göster
+        function displayCoverImage() {
+            const coverImageSection = document.getElementById('coverImageSection');
+            const coverImage = document.getElementById('coverImage');
+            
+            if (interview && interview.cover_image) {
+                coverImage.src = interview.cover_image;
+                coverImage.alt = `${interview.title} - Kapak Resmi`;
+                
+                // Tam boyut görünüm için tıklama olayı
+                coverImage.onclick = function() {
+                    showFullscreenImage(interview.cover_image, `${interview.title} - Kapak Resmi`);
+                };
+                
+                coverImageSection.style.display = 'block';
+            } else {
+                coverImageSection.style.display = 'none';
+            }
+        }
+
+        // Tam boyut resim göster
+        function showFullscreenImage(imageSrc, imageAlt) {
+            const modal = document.getElementById('imageModal');
+            const fullscreenImage = document.getElementById('fullscreenImage');
+            
+            fullscreenImage.src = imageSrc;
+            fullscreenImage.alt = imageAlt;
+            modal.classList.add('show');
+        }
+
+        // Resim modalını kapat
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('show');
+        }
+
+        // Hata göster
+        function showError(message) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+
+        // Admin durumunu kontrol et
+        async function checkAdminStatus() {
+            try {
+                // Önce localStorage'dan kontrol et
+                const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+                const adminEmail = localStorage.getItem('adminEmail');
+                
+                if (isAdminLoggedIn && adminEmail === 'gelmemeyegidenkitapkurdu@gmail.com') {
+                    // localStorage'da admin durumu var, gerçek auth kontrolü yap
+                    try {
+                        const session = await checkSession();
+                        if (!session.isLoggedIn) {
+                            // Session yoksa admin girişi yap
+                            console.log('Admin auth token bulunamadı, giriş yapılıyor...');
+                            const loginResult = await loginAsAdmin('gelmemeyegidenkitapkurdu@gmail.com', 'Elif.6628.Akin');
+                            if (loginResult.success) {
+                                isAdmin = true;
+                                console.log('Admin durumu: true (auth başarılı)');
+                            } else {
+                                console.log('Admin auth başarısız:', loginResult.message);
+                                isAdmin = false;
+                            }
+                        } else {
+                            isAdmin = session.isAdmin;
+                            console.log('Admin durumu:', isAdmin, '(mevcut session)');
+                        }
+                    } catch (authError) {
+                        console.log('Auth hatası, localStorage kontrolü kullanılıyor:', authError);
+                        isAdmin = true; // Fallback olarak localStorage'a güven
+                    }
+                    return;
+                }
+                
+                // localStorage'da admin yok, Supabase session'ını kontrol et
+                const session = await checkSession();
+                isAdmin = session && session.isAdmin;
+                console.log('Admin durumu:', isAdmin, '(sadece Supabase session)');
+            } catch (error) {
+                console.error('Admin kontrol hatası:', error);
+                isAdmin = false;
+            }
+        }
+
+        // Admin kontrollerini ayarla
+        function setupAdminControls() {
+            // Düzenleme butonu
+            document.getElementById('editInterviewBtn').addEventListener('click', function() {
+                showEditModal();
+            });
+            
+            // Silme butonu
+            document.getElementById('deleteInterviewBtn').addEventListener('click', function() {
+                showDeleteModal();
+            });
+            
+            // Silme onay butonu
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                deleteInterview();
+            });
+        }
+
+        // Silme modalını göster
+        function showDeleteModal() {
+            const modal = document.getElementById('deleteConfirmModal');
+            const titlePreview = modal.querySelector('.interview-title-preview');
+            
+            titlePreview.textContent = interview.title;
+            modal.classList.add('show');
+        }
+
+        // Silme modalını kapat
+        function closeDeleteModal() {
+            document.getElementById('deleteConfirmModal').classList.remove('show');
+        }
+
+        // Röportajı sil
+        async function deleteInterview() {
+            try {
+                // Silme işlemini başlat
+                const result = await deleteWhatsAppInterview(interviewId);
+                
+                if (result) {
+                    alert('Röportaj başarıyla silindi!');
+                    window.location.href = 'roportaj.html';
+                } else {
+                    alert('Röportaj silinirken bir hata oluştu.');
+                    closeDeleteModal();
+                }
+            } catch (error) {
+                console.error('Röportaj silme hatası:', error);
+                alert('Röportaj silinirken bir hata oluştu: ' + error.message);
+                closeDeleteModal();
+            }
+        }
+
+        // Düzenleme modalını göster
+        function showEditModal() {
+            // Form alanlarını doldur
+            document.getElementById('editInterviewTitle').value = interview.title || '';
+            document.getElementById('editInterviewDesc').value = interview.description || '';
+            document.getElementById('editInterviewerName').value = interview.interviewer_name || '';
+            document.getElementById('editGuestName').value = interview.guest_name || '';
+            
+            // Röportaj durumunu ayarla
+            if (interview.status === 'draft') {
+                document.getElementById('editStatusDraft').checked = true;
+            } else {
+                document.getElementById('editStatusPublished').checked = true;
+            }
+            
+            // Diyalogları temizle ve yükle
+            loadEditDialogs();
+            
+            // Modalı göster
+            document.getElementById('editInterviewModal').classList.add('show');
+            
+            // Hata/başarı mesajlarını gizle
+            document.getElementById('editErrorMessage').style.display = 'none';
+            document.getElementById('editSuccessMessage').style.display = 'none';
+            document.getElementById('editLoadingIndicator').classList.remove('show');
+        }
+        
+        // Düzenleme için diyalogları yükle
+        function loadEditDialogs() {
+            const container = document.getElementById('editDialogContainer');
+            container.innerHTML = '';
+            
+            // Mesajları diyaloglara dönüştür
+            if (messages && messages.length > 0) {
+                messages.forEach((message, index) => {
+                    // Diyalog satırı oluştur
+                    const dialogRow = document.createElement('div');
+                    dialogRow.className = 'dialog-row';
+                    dialogRow.setAttribute('data-message-id', message.id);
+                    
+                    dialogRow.innerHTML = `
+                        <div class="dialog-sender">
+                            <label class="form-label" style="margin-bottom: 0.3rem;">Konuşan:</label>
+                            <select class="form-input dialog-sender-select">
+                                <option value="interviewer" ${message.sender_type === 'interviewer' ? 'selected' : ''}>Röportajcı</option>
+                                <option value="guest" ${message.sender_type === 'guest' ? 'selected' : ''}>Konuk</option>
+                            </select>
+                        </div>
+                        <div class="dialog-content">
+                            <label class="form-label" style="margin-bottom: 0.3rem;">Diyalog içeriği:</label>
+                            <textarea class="form-input dialog-content-input" 
+                                    placeholder="Diyalog içeriğini buraya yazın..." 
+                                    rows="3" required>${message.content || ''}</textarea>
+                        </div>
+                        <div class="dialog-actions">
+                            <button type="button" class="remove-dialog-btn" onclick="removeEditDialog(this)">
+                                ❌
+                            </button>
+                        </div>
+                    `;
+                    
+                    container.appendChild(dialogRow);
+                });
+                
+                // En az bir diyalog ekleyip bir mesaj yoksa
+            } else {
+                addEditDialog(); // Boş bir diyalog ekle
+            }
+            
+            updateEditRemoveButtons();
+        }
+        
+        // Düzenleme için yeni diyalog ekle
+        function addEditDialog() {
+            const container = document.getElementById('editDialogContainer');
+            
+            // Diyalog satırı oluştur
+            const dialogRow = document.createElement('div');
+            dialogRow.className = 'dialog-row';
+            dialogRow.innerHTML = `
+                <div class="dialog-sender">
+                    <label class="form-label" style="margin-bottom: 0.3rem;">Konuşan:</label>
+                    <select class="form-input dialog-sender-select">
+                        <option value="interviewer">Röportajcı</option>
+                        <option value="guest">Konuk</option>
+                    </select>
+                </div>
+                <div class="dialog-content">
+                    <label class="form-label" style="margin-bottom: 0.3rem;">Diyalog içeriği:</label>
+                    <textarea class="form-input dialog-content-input" 
+                            placeholder="Diyalog içeriğini buraya yazın..." 
+                            rows="3" required></textarea>
+                </div>
+                <div class="dialog-actions">
+                    <button type="button" class="remove-dialog-btn" onclick="removeEditDialog(this)">
+                        ❌
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(dialogRow);
+            updateEditRemoveButtons();
+        }
+        
+        // Düzenleme için diyalog sil
+        function removeEditDialog(button) {
+            const dialogRow = button.closest('.dialog-row');
+            dialogRow.remove();
+            updateEditRemoveButtons();
+        }
+        
+        // Düzenleme için silme butonlarını güncelle
+        function updateEditRemoveButtons() {
+            const removeButtons = document.querySelectorAll('#editDialogContainer .remove-dialog-btn');
+            
+            // Sadece bir diyalog varsa silme butonunu gizle
+            if (removeButtons.length <= 1) {
+                removeButtons.forEach(btn => btn.style.display = 'none');
+            } else {
+                removeButtons.forEach(btn => btn.style.display = 'block');
+            }
+        }
+
+        // Düzenleme modalını kapat
+        function closeEditModal() {
+            document.getElementById('editInterviewModal').classList.remove('show');
+        }
+
+        // Röportajı güncelle
+        async function updateInterview(event) {
+            event.preventDefault();
+            
+            // Hata/başarı mesajlarını temizle
+            document.getElementById('editErrorMessage').style.display = 'none';
+            document.getElementById('editSuccessMessage').style.display = 'none';
+            
+            // Yükleniyor göstergesini göster
+            document.getElementById('editLoadingIndicator').classList.add('show');
+            document.getElementById('editSubmitBtn').disabled = true;
+            
+            try {
+                // Durum seçimini al - daha güvenli yöntem
+                const statusRadios = document.querySelectorAll('input[name="editStatus"]');
+                let status = 'published'; // varsayılan değer
+                
+                for (let radio of statusRadios) {
+                    if (radio.checked) {
+                        status = radio.value;
+                        break;
+                    }
+                }
+                
+                console.log('Seçilen status:', status);
+                
+                const updatedInterview = {
+                    title: document.getElementById('editInterviewTitle').value.trim(),
+                    description: document.getElementById('editInterviewDesc').value.trim(),
+                    interviewer_name: document.getElementById('editInterviewerName').value.trim(),
+                    guest_name: document.getElementById('editGuestName').value.trim(),
+                    status: status
+                };
+                
+                console.log('Güncellenecek röportaj verileri:', updatedInterview);
+                
+                // Validasyon
+                if (!updatedInterview.title || !updatedInterview.description || 
+                    !updatedInterview.interviewer_name || !updatedInterview.guest_name) {
+                    showEditError('Lütfen tüm alanları doldurun!');
+                    return;
+                }
+                
+                // Diyalogları topla
+                const dialogRows = document.querySelectorAll('#editDialogContainer .dialog-row');
+                const dialogs = [];
+                let emptyDialogFound = false;
+                
+                dialogRows.forEach((row, index) => {
+                    const senderSelect = row.querySelector('.dialog-sender-select');
+                    const contentTextarea = row.querySelector('.dialog-content-input');
+                    const contentValue = contentTextarea.value.trim();
+                    const messageId = row.getAttribute('data-message-id');
+                    
+                    if (contentValue) {
+                        dialogs.push({
+                            id: messageId, // Varsa mevcut mesaj ID'si
+                            sender: senderSelect.value,
+                            content: contentValue
+                        });
+                    } else {
+                        emptyDialogFound = true;
+                    }
+                });
+                
+                if (emptyDialogFound) {
+                    showEditError('Boş diyalog mesajları var! Lütfen tüm diyalog alanlarını doldurun veya boş olanları kaldırın.');
+                    document.getElementById('editLoadingIndicator').classList.remove('show');
+                    document.getElementById('editSubmitBtn').disabled = false;
+                    return;
+                }
+                
+                if (dialogs.length === 0) {
+                    showEditError('En az bir diyalog eklemelisiniz! Röportaj diyalog olmadan güncellenemez.');
+                    document.getElementById('editLoadingIndicator').classList.remove('show');
+                    document.getElementById('editSubmitBtn').disabled = false;
+                    return;
+                }
+                
+                // Röportajı güncelle
+                console.log('Röportaj güncelleniyor...', interviewId, updatedInterview);
+                const result = await updateWhatsAppInterview(interviewId, updatedInterview);
+                console.log('Güncelleme sonucu:', result);
+                
+                if (result) {
+                    // Mevcut diyalogları güncelle veya yenilerini ekle
+                    document.getElementById('editLoadingIndicator').textContent = '💬 Diyaloglar güncelleniyor...';
+                    
+                    let dialogsProcessed = 0;
+                    let dialogErrors = 0;
+                    
+                    // Önce mevcut mesajları işaretle - sonra silinecekler
+                    const existingMessageIds = messages.map(m => m.id);
+                    const updatedMessageIds = dialogs.filter(d => d.id).map(d => d.id);
+                    const deletedMessageIds = existingMessageIds.filter(id => !updatedMessageIds.includes(id));
+                    
+                    // Silinen mesajları kaldır
+                    for (let i = 0; i < deletedMessageIds.length; i++) {
+                        try {
+                            await deleteWhatsAppMessage(deletedMessageIds[i]);
+                        } catch (error) {
+                            console.error(`Mesaj silme hatası (ID: ${deletedMessageIds[i]}):`, error);
+                            dialogErrors++;
+                        }
+                    }
+                    
+                    // Diyalogları işle - mevcut olanları güncelle, yeni olanları ekle
+                    for (let i = 0; i < dialogs.length; i++) {
+                        document.getElementById('editLoadingIndicator').textContent = `💬 Diyaloglar güncelleniyor... (${i+1}/${dialogs.length})`;
+                        
+                        const dialog = dialogs[i];
+                        const actualSender = dialog.sender === 'interviewer' ? updatedInterview.interviewer_name : updatedInterview.guest_name;
+                        
+                        try {
+                            if (dialog.id) {
+                                // Mevcut mesajı güncelle
+                                const updateResult = await updateWhatsAppMessage(dialog.id, {
+                                    sender_type: dialog.sender,
+                                    content: dialog.content
+                                });
+                                
+                                if (updateResult) {
+                                    dialogsProcessed++;
+                                } else {
+                                    dialogErrors++;
+                                }
+                            } else {
+                                // Yeni mesaj ekle
+                                const newMessage = {
+                                    interview_id: interviewId,
+                                    sender_type: dialog.sender,
+                                    content: dialog.content,
+                                    message_type: 'text'
+                                };
+                                
+                                const addResult = await addWhatsAppMessage(newMessage);
+                                if (addResult) {
+                                    dialogsProcessed++;
+                                } else {
+                                    dialogErrors++;
+                                }
+                            }
+                        } catch (error) {
+                            console.error(`Diyalog ${i+1} işlenirken hata:`, error);
+                            dialogErrors++;
+                        }
+                    }
+                    
+                    document.getElementById('editLoadingIndicator').textContent = '✅ İşlem tamamlanıyor...';
+                    
+                    if (dialogErrors > 0) {
+                        showEditSuccess(`Röportaj güncellendi! Ancak ${dialogErrors} diyalog işlenirken sorun oluştu.`);
+                    } else {
+                        const statusMessage = status === 'draft' ? 'taslak olarak kaydedildi' : 'yayınlandı';
+                        showEditSuccess(`Röportaj başarıyla ${statusMessage}! Tüm diyaloglar güncellendi.`);
+                    }
+                    
+                    // Sayfayı 2 saniye sonra yenile
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    console.error('Röportaj güncelleme başarısız - result null/false');
+                    showEditError('Röportaj güncellenirken bir hata oluştu. Lütfen tekrar deneyin.');
+                }
+            } catch (error) {
+                console.error('Röportaj güncelleme hatası:', error);
+                showEditError('Röportaj güncellenirken bir hata oluştu: ' + (error.message || 'Bilinmeyen hata'));
+            } finally {
+                document.getElementById('editLoadingIndicator').classList.remove('show');
+                document.getElementById('editSubmitBtn').disabled = false;
+            }
+        }
+
+        // Düzenleme hata mesajı göster
+        function showEditError(message) {
+            const errorDiv = document.getElementById('editErrorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            document.getElementById('editSuccessMessage').style.display = 'none';
+            document.getElementById('editLoadingIndicator').classList.remove('show');
+            document.getElementById('editSubmitBtn').disabled = false;
+        }
+
+        // Düzenleme başarı mesajı göster
+        function showEditSuccess(message) {
+            const successDiv = document.getElementById('editSuccessMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            
+            document.getElementById('editErrorMessage').style.display = 'none';
+        }
+
+        // Modal dışına tıklanınca kapat
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('show');
+            }
+            // Resim modalı için
+            if (event.target.classList.contains('image-modal')) {
+                closeImageModal();
+            }
+        };
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                initializeSupabase();
+                await checkAdminStatus();
+                await loadInterview();
+            } catch (error) {
+                console.error('Başlatma hatası:', error);
+                showError('Sayfa yüklenirken bir hata oluştu.');
+            }
+        });
+    </script>
+</body>
+</html>

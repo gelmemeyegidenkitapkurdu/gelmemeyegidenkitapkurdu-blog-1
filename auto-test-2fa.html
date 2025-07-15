@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto 2FA Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f8e1ff 0%, #e1c9ff 100%);
+            padding: 2rem;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.2);
+        }
+        .log {
+            background: #f3f4f6;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            border-left: 4px solid #9333ea;
+            font-family: monospace;
+        }
+        .success { border-left-color: #10b981; }
+        .error { border-left-color: #ef4444; }
+        .info { border-left-color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="color: #9333ea; text-align: center;">🔍 2FA Sistem Testi</h1>
+        <div id="logs"></div>
+        <button onclick="runTest()" style="background: #9333ea; color: white; padding: 1rem 2rem; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-size: 1.1rem;">
+            🚀 Testi Başlat
+        </button>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            logs.appendChild(logDiv);
+            logs.scrollTop = logs.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        async function runTest() {
+            log('🔧 2FA Test başlatılıyor...', 'info');
+            
+            try {
+                // Supabase bağlantısını test et
+                log('📡 Supabase bağlantısı kontrol ediliyor...', 'info');
+                const connected = initializeSupabase();
+                if (connected) {
+                    log('✅ Supabase bağlantısı başarılı!', 'success');
+                } else {
+                    log('❌ Supabase bağlantısı başarısız!', 'error');
+                    return;
+                }
+
+                // 1. Admin giriş testi
+                log('🔑 Admin giriş bilgileri test ediliyor...', 'info');
+                const loginResult = await loginAsAdmin('gelmemeyegidenkitapkurdu@gmail.com', 'Elif.6628.Akin');
+                
+                if (loginResult.success) {
+                    log('✅ Admin giriş bilgileri doğru!', 'success');
+                } else {
+                    log('❌ Admin giriş bilgileri hatalı!', 'error');
+                    return;
+                }
+
+                // 2. Email kod gönderme testi
+                log('📧 Email doğrulama kodu gönderiliyor...', 'info');
+                const codeResult = await sendAdminVerificationCode('gelmemeyegidenkitapkurdu@gmail.com');
+                
+                if (codeResult.success) {
+                    log('✅ Email kodu başarıyla gönderildi!', 'success');
+                    if (codeResult.demo_code) {
+                        log(`🔢 Demo Kodu: ${codeResult.demo_code}`, 'info');
+                    }
+                } else {
+                    log(`❌ Email kodu gönderilemedi: ${codeResult.error}`, 'error');
+                    return;
+                }
+
+                // 3. Kod doğrulama testi
+                if (codeResult.demo_code) {
+                    log('🔍 Email kodu doğrulanıyor...', 'info');
+                    const verifyResult = await verifyAdminCode('gelmemeyegidenkitapkurdu@gmail.com', codeResult.demo_code);
+                    
+                    if (verifyResult.success) {
+                        log('🎉 Email kodu başarıyla doğrulandı!', 'success');
+                        log('✅ 2FA sistemi tam olarak çalışıyor!', 'success');
+                    } else {
+                        log(`❌ Email kodu doğrulanamadı: ${verifyResult.error}`, 'error');
+                    }
+                } else {
+                    log('⚠️ Demo kod bulunamadı, manuel doğrulama gerekli.', 'info');
+                }
+
+                // 4. Geçersiz kod testi
+                log('🧪 Geçersiz kod testi yapılıyor...', 'info');
+                const invalidResult = await verifyAdminCode('gelmemeyegidenkitapkurdu@gmail.com', '000000');
+                
+                if (!invalidResult.success) {
+                    log('✅ Geçersiz kod doğru şekilde reddedildi!', 'success');
+                } else {
+                    log('❌ Geçersiz kod kabul edildi! Güvenlik sorunu!', 'error');
+                }
+
+                log('🏁 Test tamamlandı!', 'info');
+
+            } catch (error) {
+                log(`💥 Test sırasında hata: ${error.message}`, 'error');
+            }
+        }
+
+        // Sayfa yüklendiğinde Supabase'i başlat
+        document.addEventListener('DOMContentLoaded', function() {
+            log('📋 Test sayfası hazır.', 'info');
+        });
+    </script>
+</body>
+</html>

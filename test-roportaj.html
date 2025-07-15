@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Röportaj Test</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Röportaj Kaydetme Test</h1>
+    <button id="testBtn">Admin Girişi Yap ve Röportaj Ekle</button>
+    <div id="result"></div>
+
+    <script>
+        // Supabase ayarları
+        const supabaseUrl = 'https://oxqobtlcbksfdajnvnoz.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94cW9idGxjYmtzZmRham52bm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4OTc3MzUsImV4cCI6MjA1MjQ3MzczNX0.06tKXhOw8J4ZEH6Pc3CQMcxbJh4VHoOw8Xf4XS8K1B8';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        console.log('Supabase bağlantısı başarılı!');
+        
+        // Admin giriş fonksiyonu
+        async function loginAsAdmin(email, password) {
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (error) throw error;
+                
+                if (data.user && data.user.email === 'gelmemeyegidenkitapkurdu@gmail.com') {
+                    localStorage.setItem('isAdminLoggedIn', 'true');
+                    localStorage.setItem('adminEmail', data.user.email);
+                    return { success: true, user: data.user };
+                } else {
+                    await supabase.auth.signOut();
+                    return { success: false, message: 'Admin yetkisi bulunamadı.' };
+                }
+            } catch (error) {
+                console.error('Admin girişi hatası:', error);
+                return { success: false, message: error.message };
+            }
+        }
+        
+        // Röportaj ekleme fonksiyonu
+        async function addWhatsAppInterview(interview) {
+            try {
+                const { data, error } = await supabase
+                    .from('whatsapp_interviews')
+                    .insert([interview])
+                    .select();
+                    
+                if (error) throw error;
+                return data[0];
+            } catch (error) {
+                console.error('WhatsApp röportajı ekleme hatası:', error);
+                return null;
+            }
+        }
+        
+        // Mesaj ekleme fonksiyonu
+        async function addWhatsAppMessage(message) {
+            try {
+                const { data: lastMessage } = await supabase
+                    .from('whatsapp_messages')
+                    .select('message_order')
+                    .eq('interview_id', message.interview_id)
+                    .order('message_order', { ascending: false })
+                    .limit(1);
+                    
+                const nextOrder = lastMessage && lastMessage.length > 0 ? lastMessage[0].message_order + 1 : 1;
+                
+                const { data, error } = await supabase
+                    .from('whatsapp_messages')
+                    .insert([{ ...message, message_order: nextOrder }])
+                    .select();
+                    
+                if (error) throw error;
+                return data[0];
+            } catch (error) {
+                console.error('WhatsApp mesajı ekleme hatası:', error);
+                return null;
+            }
+        }
+    </script>
+    <script>
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Test başlatılıyor...';
+            
+            try {
+                // 1. Admin girişi yap
+                console.log('Admin girişi yapılıyor...');
+                const loginResult = await loginAsAdmin('gelmemeyegidenkitapkurdu@gmail.com', 'Elif.6628.Akin');
+                
+                if (!loginResult.success) {
+                    throw new Error('Admin girişi başarısız: ' + loginResult.message);
+                }
+                
+                console.log('Admin girişi başarılı!');
+                resultDiv.innerHTML += '<br>✅ Admin girişi başarılı!';
+                
+                // 2. Test röportajı oluştur
+                console.log('Test röportajı oluşturuluyor...');
+                const interview = {
+                    title: 'Test Röportajı',
+                    description: 'Bu bir test röportajıdır.',
+                    guest_name: 'Test Konuk',
+                    interviewer_name: 'Test Röportajcı',
+                    cover_image: null
+                };
+                
+                const interviewResult = await addWhatsAppInterview(interview);
+                
+                if (!interviewResult) {
+                    throw new Error('Röportaj ekleme başarısız');
+                }
+                
+                console.log('Röportaj başarıyla eklendi:', interviewResult);
+                resultDiv.innerHTML += '<br>✅ Röportaj eklendi! ID: ' + interviewResult.id;
+                
+                // 3. Test mesajı ekle
+                console.log('Test mesajı ekleniyor...');
+                const message = {
+                    interview_id: interviewResult.id,
+                    sender_type: 'interviewer',
+                    content: 'Test mesajı',
+                    message_type: 'text'
+                };
+                
+                const messageResult = await addWhatsAppMessage(message);
+                
+                if (!messageResult) {
+                    throw new Error('Mesaj ekleme başarısız');
+                }
+                
+                console.log('Mesaj başarıyla eklendi:', messageResult);
+                resultDiv.innerHTML += '<br>✅ Mesaj eklendi! ID: ' + messageResult.id;
+                
+                resultDiv.innerHTML += '<br><br>🎉 Tüm testler başarılı!';
+                
+            } catch (error) {
+                console.error('Test hatası:', error);
+                resultDiv.innerHTML += '<br>❌ Hata: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

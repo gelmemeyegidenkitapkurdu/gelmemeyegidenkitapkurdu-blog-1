@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Test - Röportaj</title>
+</head>
+<body>
+    <h1>Admin Durumu Test Ediliyor...</h1>
+    <script>
+        // Admin durumunu localStorage'a kaydet
+        localStorage.setItem('isAdminLoggedIn', 'true');
+        localStorage.setItem('adminEmail', 'gelmemeyegidenkitapkurdu@gmail.com');
+        
+        console.log('Admin durumu ayarlandı');
+        console.log('isAdminLoggedIn:', localStorage.getItem('isAdminLoggedIn'));
+        console.log('adminEmail:', localStorage.getItem('adminEmail'));
+        
+        // 1 saniye sonra röportaj sayfasına yönlendir
+        setTimeout(function() {
+            window.location.href = 'roportaj-detail.html?id=6';
+        }, 1000);
+    </script>
+</body>
+</html>

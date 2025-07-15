@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Röportaj Detayı - Gelmemeyegiden Kitap Kurdu</title>
+    <style>
+        /* Temel Stiller */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 50%, #e1c9ff 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(147, 51, 234, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #9333ea;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-link {
+            color: #9333ea;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(147, 51, 234, 0.1);
+        }
+
+        .main-content {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-title {
+            color: #9333ea;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 4px;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            border-radius: 2px;
+        }
+
+        /* Röportaj detay stilleri */
+        .interview-detail {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.15);
+        }
+
+        .interview-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .interview-title {
+            color: #9333ea;
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .interview-detail-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .interview-participants-info {
+            display: flex;
+            justify-content: space-between;
+            background: #f9f5ff;
+            padding: 1rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .participant {
+            text-align: center;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+        }
+
+        .participant.interviewer {
+            background: rgba(147, 51, 234, 0.1);
+        }
+
+        .participant.interviewee {
+            background: rgba(236, 72, 153, 0.1);
+        }
+
+        .participant-name {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .participant-role {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .interview-excerpt {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 2rem;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* Chat stilleri */
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .chat-message {
+            display: flex;
+            margin-bottom: 1.5rem;
+        }
+
+        .chat-message.interviewer {
+            justify-content: flex-start;
+        }
+
+        .chat-message.interviewee {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 1rem;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .interviewer .message-bubble {
+            background: #9333ea;
+            color: white;
+            border-top-left-radius: 5px;
+        }
+
+        .interviewee .message-bubble {
+            background: #ec4899;
+            color: white;
+            border-top-right-radius: 5px;
+        }
+
+        .message-sender {
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .message-text {
+            line-height: 1.5;
+        }
+
+        .back-to-list {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 2rem auto 0;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .back-to-list:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .interview-participants-info {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .message-bubble {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <a href="index.html" class="logo">📚 Kitap Kurdu</a>
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link">🏠 Ana Sayfa</a>
+            <a href="yazilar.html" class="nav-link">📝 Yazılar</a>
+            <a href="anketler.html" class="nav-link">📊 Anketler</a>
+            <a href="kitaplar.html" class="nav-link">📖 Kitaplar</a>
+            <a href="roportaj.html" class="nav-link">🎤 Röportaj</a>
+            <a href="hakkimda.html" class="nav-link">👤 Hakkımda</a>
+        </nav>
+    </header>
+
+    <!-- Ana İçerik -->
+    <main class="main-content">
+        <h1 class="page-title">🎤 Röportaj Detayı</h1>
+        
+        <!-- Röportaj Detay -->
+        <div class="interview-detail">
+            <div class="interview-header">
+                <h2 class="interview-title">Edebiyat Dünyasında Kadın Yazarlar</h2>
+                <img src="https://public.youware.com/users-website-assets/prod/706f2595-99eb-435f-b9ad-4ea6b1d680ac/4f38b6e4464442a8af9265233947205f.jpg" alt="Edebiyat Dünyasında Kadın Yazarlar" class="interview-detail-image">
+                
+                <div class="interview-participants-info">
+                    <div class="participant interviewer">
+                        <div class="participant-name">Gelmemeyegiden Kitap Kurdu</div>
+                        <div class="participant-role">Röportajı Yapan</div>
+                    </div>
+                    <div class="participant interviewee">
+                        <div class="participant-name">Ayşe Kulin</div>
+                        <div class="participant-role">Konuk</div>
+                    </div>
+                </div>
+                
+                <p class="interview-excerpt">Ünlü yazar Ayşe Kulin ile edebiyat dünyasında kadın yazarların deneyimleri, zorlukları ve başarıları üzerine keyifli bir sohbet.</p>
+            </div>
+            
+            <div class="chat-container">
+                <div class="chat-message interviewer">
+                    <div class="message-bubble">
+                        <div class="message-sender">Gelmemeyegiden Kitap Kurdu</div>
+                        <div class="message-text">Öncelikle bu röportaj için zaman ayırdığınız için teşekkür ederim. Edebiyat dünyasında bir kadın yazar olarak karşılaştığınız zorluklar nelerdi?</div>
+                    </div>
+                </div>
+                
+                <div class="chat-message interviewee">
+                    <div class="message-bubble">
+                        <div class="message-sender">Ayşe Kulin</div>
+                        <div class="message-text">Rica ederim, ben teşekkür ederim davetiniz için. Kadın bir yazar olarak başlangıçta ciddiye alınmamak en büyük zorluktu. Sanki kadınlar sadece aşk romanları yazabilirmiş gibi bir algı vardı. Ama zamanla bu algıyı kırdığımı düşünüyorum.</div>
+                    </div>
+                </div>
+                
+                <div class="chat-message interviewer">
+                    <div class="message-bubble">
+                        <div class="message-sender">Gelmemeyegiden Kitap Kurdu</div>
+                        <div class="message-text">Yazarlık yolculuğunuza nasıl başladınız? İlk eserinizi yayımlatma sürecinde neler yaşadınız?</div>
+                    </div>
+                </div>
+                
+                <div class="chat-message interviewee">
+                    <div class="message-bubble">
+                        <div class="message-sender">Ayşe Kulin</div>
+                        <div class="message-text">İlk öykülerimi lisede yazmaya başladım. Ama profesyonel anlamda yazarlığa adım atmam uzun yıllar sonra oldu. İlk kitabım için tam 12 yayınevine başvurdum ve hepsinden ret aldım. 13. yayınevi şansım oldu ve kitabım beklenmedik bir ilgi gördü.</div>
+                    </div>
+                </div>
+                
+                <div class="chat-message interviewer">
+                    <div class="message-bubble">
+                        <div class="message-sender">Gelmemeyegiden Kitap Kurdu</div>
+                        <div class="message-text">Genç yazarlara, özellikle de kadın yazarlara ne gibi tavsiyelerde bulunursunuz?</div>
+                    </div>
+                </div>
+                
+                <div class="chat-message interviewee">
+                    <div class="message-bubble">
+                        <div class="message-sender">Ayşe Kulin</div>
+                        <div class="message-text">Öncelikle çok okumalarını ve asla vazgeçmemelerini tavsiye ederim. Kadın ya da erkek, bir yazar her şeyden önce iyi bir gözlemci olmalı. Etrafınızdaki dünyayı ve insanları gözlemleyin. Ve en önemlisi, kendi sesinizi bulun. Başkalarının beklentilerine göre değil, kendi kalbinizin sesini dinleyerek yazın.</div>
+                    </div>
+                </div>
+                
+                <div class="chat-message interviewer">
+                    <div class="message-bubble">
+                        <div class="message-sender">Gelmemeyegiden Kitap Kurdu</div>
+                        <div class="message-text">Son yıllarda Türk edebiyatında kadın yazarların daha görünür olduğunu düşünüyor musunuz?</div>
+                    </div>
+                </div>
+                
+                <div class="chat-message interviewee">
+                    <div class="message-bubble">
+                        <div class="message-sender">Ayşe Kulin</div>
+                        <div class="message-text">Kesinlikle! Artık çok daha fazla kadın yazar var ve seslerini duyurabiliyorlar. Eskiden erkek egemen bir alan olan edebiyatta kadınlar artık çok güçlü bir şekilde var oluyorlar. Bu beni çok mutlu ediyor. Genç kadın yazarların cesareti ve özgüveni beni umutlandırıyor.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <a href="roportaj.html" class="back-to-list">← Röportaj Listesine Dön</a>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth ile Röportaj Güncelleme Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Auth ile taslak röportaj güncelleme testi</h1>
+    <div id="result"></div>
+    
+    <script src="supabase-client.js"></script>
+    <script>
+        async function testAuthUpdate() {
+            try {
+                initializeSupabase();
+                
+                console.log('Auth test başlıyor...');
+                
+                // Önce admin olarak giriş yap
+                const loginResult = await loginAsAdmin('gelmemeyegidenkitapkurdu@gmail.com', 'Elif.6628.Akin');
+                
+                if (!loginResult.success) {
+                    document.getElementById('result').innerHTML = `
+                        <h2 style="color: red;">❌ Auth Hatası!</h2>
+                        <p>Admin girişi başarısız: ${loginResult.message}</p>
+                    `;
+                    return;
+                }
+                
+                console.log('Admin girişi başarılı:', loginResult);
+                
+                // Test verisi
+                const updatedInterview = {
+                    title: 'Buşra Balçık || Röportaj - Auth ile Güncellenmiş',
+                    description: 'Gümüş Taht serisi ve Zehirli Gölge kitaplarının yazarı Buşra Balçık ile yapılan röportaj - Auth Test güncellemesi',
+                    interviewer_name: 'Elif | gelmemeyegidenkitapkurdu',
+                    guest_name: 'Buşra Balçık',
+                    status: 'published' // taslaktan yayına çeviriyoruz
+                };
+                
+                console.log('Güncellenecek veri:', updatedInterview);
+                
+                // Güncelleme işlemi (şimdi auth token ile)
+                const result = await updateWhatsAppInterview(6, updatedInterview);
+                
+                if (result) {
+                    document.getElementById('result').innerHTML = `
+                        <h2 style="color: green;">✅ Başarılı!</h2>
+                        <p>Röportaj auth ile başarıyla güncellendi</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                    console.log('Auth güncelleme başarılı:', result);
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <h2 style="color: red;">❌ Hata!</h2>
+                        <p>Röportaj auth ile güncellenirken hata oluştu</p>
+                    `;
+                    console.log('Auth güncelleme başarısız');
+                }
+                
+            } catch (error) {
+                console.error('Auth test hatası:', error);
+                document.getElementById('result').innerHTML = `
+                    <h2 style="color: red;">❌ Hata!</h2>
+                    <p>Auth test sırasında hata: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // Test'i çalıştır
+        testAuthUpdate();
+    </script>
+</body>
+</html>

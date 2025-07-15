@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerçek Profil Düzenleme Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Gerçek profil düzenleme işlemi test ediliyor...</h1>
+    <div id="result"></div>
+    
+    <script src="supabase-client.js"></script>
+    <script>
+        async function testRealEdit() {
+            try {
+                initializeSupabase();
+                
+                // Admin durumunu localStorage'a kaydet
+                localStorage.setItem('isAdminLoggedIn', 'true');
+                localStorage.setItem('adminEmail', 'gelmemeyegidenkitapkurdu@gmail.com');
+                
+                console.log('Admin durumu ayarlandı, hakkımda sayfasına yönlendiriliyor...');
+                
+                // 2 saniye sonra hakkımda sayfasına yönlendir
+                setTimeout(function() {
+                    window.location.href = 'hakkimda.html';
+                }, 2000);
+                
+                document.getElementById('result').innerHTML = `
+                    <p>Admin olarak giriş yapılıyor...</p>
+                    <p>Hakkımda sayfasına yönlendiriliyorsunuz...</p>
+                    <p><strong>Test Talimatları:</strong></p>
+                    <ol>
+                        <li>"Bilgilerimi Düzenle" butonuna tıklayın</li>
+                        <li>Modalda herhangi bir alanı değiştirin</li>
+                        <li>"Profil Güncelle" butonuna basın</li>
+                        <li>Başarı mesajını kontrol edin</li>
+                    </ol>
+                `;
+                
+            } catch (error) {
+                console.error('Test hatası:', error);
+                document.getElementById('result').innerHTML = `
+                    <h2 style="color: red;">❌ HATA!</h2>
+                    <p>Test sırasında hata: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // Test'i çalıştır
+        testRealEdit();
+    </script>
+</body>
+</html>

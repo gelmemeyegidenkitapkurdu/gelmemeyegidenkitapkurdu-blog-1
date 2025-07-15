@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anketler - Gelmemeyegiden Kitap Kurdu</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 50%, #e1c9ff 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Üst navigasyon */
+        .top-nav {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(147, 51, 234, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #9333ea;
+            text-decoration: none;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #9333ea;
+            border: 2px solid #9333ea;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        /* Ana başlık */
+        .page-header {
+            background: linear-gradient(135deg, #9333ea, #ec4899);
+            color: white;
+            text-align: center;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .page-description {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Admin kontrolleri */
+        .admin-controls {
+            background: white;
+            padding: 1.5rem;
+            margin: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(147, 51, 234, 0.1);
+            border: 2px solid #e1c9ff;
+            display: none;
+        }
+
+        .admin-controls.show {
+            display: block;
+        }
+
+        .admin-controls h3 {
+            color: #9333ea;
+            margin-bottom: 1rem;
+        }
+
+        /* Ana içerik */
+        .main-content {
+            background: white;
+            margin: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.15);
+            overflow: hidden;
+            padding: 2rem;
+        }
+
+        /* Anket kartları */
+        .polls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .poll-card {
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 100%);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 2px solid #e1c9ff;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .poll-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(147, 51, 234, 0.2);
+            border-color: #9333ea;
+        }
+
+        /* Anket seçenekleri */
+        .poll-options {
+            margin-top: 1.5rem;
+        }
+
+        .poll-option {
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .option-button {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e1c9ff;
+            border-radius: 10px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            text-align: left;
+        }
+
+        .option-button:hover {
+            border-color: #9333ea;
+            background: #f8e1ff;
+        }
+
+        .option-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Oy sonuçları */
+        .vote-result {
+            position: relative;
+            padding: 1rem;
+            border-radius: 10px;
+            background: white;
+            border: 2px solid #e1c9ff;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .vote-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            opacity: 0.2;
+            transition: width 0.5s ease;
+        }
+
+        .vote-text {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .vote-percentage {
+            font-weight: bold;
+            color: #9333ea;
+        }
+
+        .vote-count {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Admin için oy sayıları */
+        .admin-vote-info {
+            font-size: 0.8rem;
+            color: #666;
+            margin-left: 0.5rem;
+        }
+
+        .vote-text {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .vote-percentage {
+            font-weight: bold;
+            color: #9333ea;
+        }
+
+        /* Draft Badge */
+        .draft-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
+        }
+
+        .poll-question {
+            color: #9333ea;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+        }
+
+        .poll-options {
+            margin-bottom: 1.5rem;
+        }
+
+        .poll-option {
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .option-bar {
+            background: #e1c9ff;
+            border-radius: 20px;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-bar:hover {
+            background: #d8b4fe;
+        }
+
+        .option-bar.voted {
+            cursor: default;
+        }
+
+        .option-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            border-radius: 20px;
+            transition: width 0.5s ease;
+            opacity: 0.3;
+        }
+
+        .option-text {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option-percentage {
+            font-weight: bold;
+            color: #9333ea;
+        }
+
+        .poll-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e1c9ff;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .poll-date {
+            color: #9333ea;
+            font-weight: 500;
+        }
+
+        .total-votes {
+            color: #666;
+        }
+
+        /* Admin butonları */
+        .admin-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: none;
+            gap: 0.5rem;
+        }
+
+        .admin-actions.show {
+            display: flex;
+        }
+
+        .admin-btn {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+        }
+
+        .admin-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Modal stilleri */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #9333ea;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #9333ea;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1c9ff;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #9333ea;
+        }
+
+        .option-input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .option-input {
+            flex: 1;
+        }
+
+        .remove-option {
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 0.5rem;
+            cursor: pointer;
+        }
+
+        .add-option {
+            background: #9333ea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        /* Boş durum */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            color: #9333ea;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .polls-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                margin: 1rem;
+                padding: 1rem;
+            }
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #9333ea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Anket sonucu animasyonu */
+        .poll-result {
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .poll-result h4 {
+            color: #22c55e;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Anket resmi stilleri */
+        .poll-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.1);
+        }
+
+        /* File input custom styling */
+        .file-input-container {
+            position: relative;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        .file-input {
+            position: absolute;
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .file-name {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .image-preview {
+            width: 200px;
+            height: 120px;
+            border-radius: 10px;
+            margin: 1rem auto;
+            background-color: #f0f0f0;
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #9333ea;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <!-- Üst Navigasyon -->
+    <nav class="top-nav">
+        <a href="index.html" class="logo">📚 Kitap Kurdu</a>
+        <div class="auth-buttons" id="authButtons">
+            <a href="index.html" class="btn btn-secondary">Ana Sayfa</a>
+            <a href="#" class="btn btn-primary" onclick="openModal('adminModal')">Admin Girişi</a>
+        </div>
+    </nav>
+
+    <!-- Sayfa Başlığı -->
+    <header class="page-header">
+        <h1 class="page-title">📊 Anketler</h1>
+        <p class="page-description">Okuma alışkanlıkları ve kitap tercihleri hakkında görüşlerinizi paylaşın</p>
+    </header>
+
+
+
+    <!-- Admin Kontrolleri -->
+    <div class="admin-controls" id="adminControls">
+        <h3>Admin Kontrolleri</h3>
+        <button class="btn btn-primary" onclick="openModal('addPollModal')">
+            ➕ Yeni Anket Ekle
+        </button>
+        <button class="btn btn-secondary" onclick="clearVoteHistory()">
+            🗑️ Oy Geçmişini Temizle
+        </button>
+    </div>
+
+    <!-- Ana İçerik -->
+    <main class="main-content">
+        <div id="loadingSpinner" class="spinner"></div>
+        <div class="polls-grid" id="pollsGrid">
+            <!-- Anketler dinamik olarak yüklenecek -->
+        </div>
+        
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <h3>Henüz anket bulunmuyor</h3>
+            <p>İlk anketi eklemek için admin girişi yapın.</p>
+        </div>
+    </main>
+
+    <!-- Admin Giriş Modalı -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('adminModal')">&times;</span>
+            <h2 style="color: #9333ea; margin-bottom: 1.5rem;">Admin Girişi</h2>
+            <form id="adminForm">
+                <div class="form-group">
+                    <label>Admin E-mail:</label>
+                    <input type="email" id="adminEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Admin Şifre:</label>
+                    <input type="password" id="adminPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Admin Girişi</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Anket Ekleme/Düzenleme Modalı -->
+    <div id="addPollModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addPollModal')">&times;</span>
+            <h2 id="modalTitle" style="color: #9333ea; margin-bottom: 1.5rem;">Yeni Anket Ekle</h2>
+            <form id="pollForm">
+                <div class="form-group">
+                    <label>Anket Sorusu:</label>
+                    <input type="text" id="pollQuestion" required>
+                </div>
+                <div class="form-group">
+                    <label>Seçenekler:</label>
+                    <div id="optionsContainer">
+                        <div class="option-input-group">
+                            <input type="text" class="option-input" placeholder="Seçenek 1" required>
+                            <button type="button" class="remove-option" onclick="removeOption(this)" style="display: none;">✕</button>
+                        </div>
+                        <div class="option-input-group">
+                            <input type="text" class="option-input" placeholder="Seçenek 2" required>
+                            <button type="button" class="remove-option" onclick="removeOption(this)" style="display: none;">✕</button>
+                        </div>
+                    </div>
+                    <button type="button" class="add-option" onclick="addOption()">+ Seçenek Ekle</button>
+                </div>
+                <div class="form-group">
+                    <label>Anket Resmi (İsteğe bağlı):</label>
+                    <div class="file-input-container">
+                        <div class="image-preview" id="pollImagePreview"></div>
+                        <label for="pollImage" class="file-input-label">📷 Resim Seç</label>
+                        <input type="file" id="pollImage" class="file-input" accept="image/*">
+                        <div class="file-name" id="pollImageFileName">Dosya seçilmedi</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Bitiş Tarihi (İsteğe bağlı):</label>
+                    <input type="datetime-local" id="pollEndDate">
+                </div>
+                
+                <!-- Durum Seçimi -->
+                <div class="form-group">
+                    <label>Anket Durumu:</label>
+                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: normal;">
+                            <input type="radio" name="status" value="draft" style="margin: 0;">
+                            📝 Taslak olarak kaydet
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: normal;">
+                            <input type="radio" name="status" value="published" checked style="margin: 0;">
+                            ✅ Hemen yayınla
+                        </label>
+                    </div>
+                    <small style="color: #666; margin-top: 0.5rem; display: block;">
+                        Taslak olarak kaydedilen anketler sadece admin tarafından görülebilir.
+                    </small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="submitBtn">Anket Ekle</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script>
+        let currentEditingId = null;
+        let allPolls = [];
+        let votedPolls = JSON.parse(localStorage.getItem('votedPolls') || '[]');
+        let selectedPollImage = null;
+
+
+        
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                initializeSupabase();
+                await checkAdminStatus();
+                await loadPolls();
+                
+                // Resim önizleme için event listener
+                document.getElementById('pollImage').addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        selectedPollImage = file;
+                        document.getElementById('pollImageFileName').textContent = file.name;
+                        
+                        // Resim önizleme
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            document.getElementById('pollImagePreview').style.backgroundImage = `url('${e.target.result}')`;
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+            } catch (error) {
+                console.error('Başlatma hatası:', error);
+                hideSpinner();
+            }
+        });
+
+        // Admin durumunu kontrol et
+        async function checkAdminStatus() {
+            const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+            
+            if (isAdminLoggedIn) {
+                updateUIForAdmin();
+            }
+        }
+
+        // Admin UI güncellemesi
+        function updateUIForAdmin() {
+            const authButtons = document.getElementById('authButtons');
+            authButtons.innerHTML = `
+                <a href="index.html" class="btn btn-secondary">Ana Sayfa</a>
+                <a href="admin-panel.html" class="btn btn-primary">🔧 Admin Panel</a>
+                <a href="#" class="btn btn-secondary" onclick="logoutAdmin()">Çıkış Yap</a>
+            `;
+            
+            // Admin kontrollerini göster
+            document.getElementById('adminControls').classList.add('show');
+            
+            // Anket kartlarındaki admin butonlarını göster
+            document.querySelectorAll('.admin-actions').forEach(actions => {
+                actions.classList.add('show');
+            });
+        }
+
+        // Anketleri yükle
+        async function loadPolls() {
+            try {
+                showSpinner();
+                // Admin kontrolü yap
+                const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+                
+                // Admin ise tüm anketleri (taslak dahil), normal kullanıcı ise sadece yayınlanmış olanları getir
+                allPolls = isAdminLoggedIn ? await getAllPolls() : await getPolls();
+                displayPolls(allPolls);
+                hideSpinner();
+            } catch (error) {
+                console.error('Anketleri yükleme hatası:', error);
+                hideSpinner();
+                showEmptyState();
+            }
+        }
+
+        // Anketleri göster
+        function displayPolls(polls) {
+            const pollsGrid = document.getElementById('pollsGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (!polls || polls.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            pollsGrid.innerHTML = '';
+            
+            polls.forEach(poll => {
+                const pollCard = createPollCard(poll);
+                pollsGrid.appendChild(pollCard);
+            });
+        }
+
+        // Anket kartı oluştur
+        function createPollCard(poll) {
+            const card = document.createElement('div');
+            card.className = 'poll-card';
+            
+            const formattedDate = new Date(poll.created_at).toLocaleDateString('tr-TR');
+            const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+            const hasVoted = votedPolls.includes(poll.id);
+            
+            // Toplam oy sayısını hesapla
+            const votes = poll.votes || {};
+            const totalVotes = Object.values(votes).reduce((sum, count) => sum + count, 0);
+            
+            // Anket resmi HTML'i
+            let imageHtml = '';
+            if (poll.image_url) {
+                imageHtml = `<img src="${poll.image_url}" alt="Anket resmi" class="poll-image">`;
+            }
+            
+            // Taslak rozeti HTML'i
+            let draftBadgeHtml = '';
+            if (poll.status === 'draft') {
+                draftBadgeHtml = '<div class="draft-badge">📝 Taslak</div>';
+            }
+            
+            // Seçenekleri oluştur
+            let optionsHtml = '';
+            poll.options.forEach((option, index) => {
+                const voteCount = votes[index] || 0;
+                const percentage = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
+                
+                if (hasVoted) {
+                    // Sonuçları göster (oy verdikten sonra) - Sadece yüzdelik
+                    optionsHtml += `
+                        <div class="vote-result">
+                            <div class="vote-bar" style="width: ${percentage}%"></div>
+                            <div class="vote-text">
+                                <span>${option}</span>
+                                <span class="vote-percentage">${percentage}%</span>
+                                ${isAdminLoggedIn ? `<span class="admin-vote-info">(${voteCount} oy)</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Oy verme butonu göster
+                    optionsHtml += `
+                        <div class="poll-option">
+                            <button class="option-button" onclick="voteOption('${poll.id}', '${index}')">
+                                ${option}
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+            
+            card.innerHTML = `
+                ${draftBadgeHtml}
+                <h3 class="poll-question">${poll.question}</h3>
+                ${imageHtml}
+                <div class="poll-options">
+                    ${optionsHtml}
+                </div>
+                ${hasVoted ? `<div class="poll-result"><h4>Teşekkürler! Oyunuz kaydedildi.</h4></div>` : ''}
+                <div class="poll-meta">
+                    <span class="poll-date">${formattedDate}</span>
+                    ${isAdminLoggedIn ? `<span class="total-votes">Toplam oy: ${totalVotes}</span>` : ''}
+                </div>
+                <div class="admin-actions ${isAdminLoggedIn ? 'show' : ''}">
+                    <button class="admin-btn edit-btn" onclick="editPoll('${poll.id}')">Düzenle</button>
+                    <button class="admin-btn delete-btn" onclick="confirmDeletePoll('${poll.id}')">Sil</button>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Oy verme - Onay dialog'u ile
+        async function voteOption(pollId, optionIndex) {
+            // LocalStorage ile kontrol et (cihaz bazlı)
+            if (votedPolls.includes(pollId)) {
+                alert('Bu cihazdan bu ankete zaten oy verilmiş!');
+                return;
+            }
+            
+            // String olarak gelen optionIndex'i sayıya çevir
+            optionIndex = parseInt(optionIndex);
+            
+            // Anket bilgisini al
+            const poll = allPolls.find(p => p.id === pollId);
+            const selectedOption = poll.options[optionIndex];
+            
+            // Onay dialog'u göster
+            showVoteConfirmation(selectedOption, async (confirmed) => {
+                if (confirmed) {
+                    try {
+                        await votePoll(pollId, optionIndex);
+                        
+                        // LocalStorage'a kaydet (cihaz bazlı oyları takip etmek için)
+                        votedPolls.push(pollId);
+                        localStorage.setItem('votedPolls', JSON.stringify(votedPolls));
+                        
+                        // Anketleri yeniden yükle
+                        await loadPolls();
+                        
+                    } catch (error) {
+                        alert('Oy verirken bir hata oluştu: ' + error.message);
+                    }
+                }
+            });
+        }
+        
+        // Oy verme onay dialog'u
+        function showVoteConfirmation(selectedOption, callback) {
+            // Modal oluştur
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+                font-family: Arial, sans-serif;
+            `;
+            
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    padding: 2rem;
+                    border-radius: 15px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                    text-align: center;
+                    max-width: 400px;
+                    margin: 1rem;
+                ">
+                    <h3 style="color: #9333ea; margin-bottom: 1rem; font-size: 1.3rem;">
+                        Oyunuzu onaylayın
+                    </h3>
+                    <p style="margin-bottom: 2rem; color: #666; font-size: 1.1rem;">
+                        "<strong>${selectedOption}</strong>" seçeneğine oy vermek istiyorsunuz?
+                    </p>
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <button id="confirmVote" style="
+                            background: #22c55e;
+                            color: white;
+                            border: none;
+                            padding: 0.8rem 1.5rem;
+                            border-radius: 25px;
+                            cursor: pointer;
+                            font-size: 1.1rem;
+                            font-weight: 500;
+                            transition: all 0.3s ease;
+                        ">
+                            ✅ Evet, oy ver
+                        </button>
+                        <button id="cancelVote" style="
+                            background: #ef4444;
+                            color: white;
+                            border: none;
+                            padding: 0.8rem 1.5rem;
+                            border-radius: 25px;
+                            cursor: pointer;
+                            font-size: 1.1rem;
+                            font-weight: 500;
+                            transition: all 0.3s ease;
+                        ">
+                            ❎ İptal
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Event listener'lar
+            document.getElementById('confirmVote').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                callback(true);
+            });
+            
+            document.getElementById('cancelVote').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                callback(false);
+            });
+            
+            // Modal dışına tıklanınca kapat
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                    callback(false);
+                }
+            });
+        }
+
+        // Admin anket yönetimi fonksiyonları
+        async function editPoll(pollId) {
+            try {
+                const poll = allPolls.find(p => p.id === pollId);
+                if (!poll) {
+                    alert('Anket bulunamadı!');
+                    return;
+                }
+                
+                // Modal'ı düzenleme modunda aç
+                currentEditingId = pollId;
+                selectedPollImage = null; // Yeni resim seçilene kadar null
+                document.getElementById('modalTitle').textContent = 'Anket Düzenle';
+                document.getElementById('submitBtn').textContent = 'Anket Güncelle';
+                
+                document.getElementById('pollQuestion').value = poll.question;
+                
+                if (poll.end_date) {
+                    const endDate = new Date(poll.end_date);
+                    const localDateTime = new Date(endDate.getTime() - endDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                    document.getElementById('pollEndDate').value = localDateTime;
+                }
+                
+                // Mevcut resmi göster
+                if (poll.image_url) {
+                    document.getElementById('pollImagePreview').style.backgroundImage = `url('${poll.image_url}')`;
+                    document.getElementById('pollImageFileName').textContent = 'Mevcut resim';
+                } else {
+                    document.getElementById('pollImagePreview').style.backgroundImage = '';
+                    document.getElementById('pollImageFileName').textContent = 'Dosya seçilmedi';
+                }
+                
+                // Seçenekleri doldur
+                const container = document.getElementById('optionsContainer');
+                container.innerHTML = '';
+                
+                poll.options.forEach((option, index) => {
+                    addOptionToForm(option);
+                });
+                
+                // Status radio'yu seç
+                const statusRadio = document.querySelector(`input[name="status"][value="${poll.status || 'published'}"]`);
+                if (statusRadio) statusRadio.checked = true;
+                
+                updateRemoveButtons();
+                openModal('addPollModal');
+            } catch (error) {
+                alert('Anket yüklenirken hata oluştu: ' + error.message);
+            }
+        }
+
+        async function confirmDeletePoll(pollId) {
+            if (confirm('Bu anketi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
+                try {
+                    const success = await deletePoll(pollId);
+                    if (success) {
+                        alert('Anket başarıyla silindi!');
+                        await loadPolls();
+                    } else {
+                        alert('Anket silinirken bir hata oluştu!');
+                    }
+                } catch (error) {
+                    alert('Anket silinirken hata oluştu: ' + error.message);
+                }
+            }
+        }
+
+
+
+        // Admin giriş işlemi
+        document.getElementById('adminForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            try {
+                const loginResult = await loginAsAdmin(email, password);
+                
+                if (loginResult.success) {
+                    alert('Admin girişi başarılı!');
+                    closeModal('adminModal');
+                    updateUIForAdmin();
+                } else {
+                    alert('Hatalı admin bilgileri!');
+                }
+            } catch (error) {
+                alert('Giriş yapılırken bir hata oluştu: ' + error.message);
+            }
+        });
+
+        // Anket ekleme/düzenleme işlemi
+        document.getElementById('pollForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const question = document.getElementById('pollQuestion').value;
+            const endDate = document.getElementById('pollEndDate').value;
+            
+            // Seçenekleri topla
+            const optionInputs = document.querySelectorAll('.option-input');
+            const options = Array.from(optionInputs)
+                .map(input => input.value.trim())
+                .filter(option => option !== '');
+            
+            if (options.length < 2) {
+                alert('En az 2 seçenek girmelisiniz!');
+                return;
+            }
+            
+            try {
+                let imageUrl = null;
+                
+                // Eğer yeni resim seçildiyse, yükle
+                if (selectedPollImage) {
+                    imageUrl = await uploadImage(selectedPollImage, 'poll-images');
+                    
+                    if (!imageUrl) {
+                        alert('Resim yüklenirken hata oluştu!');
+                        return;
+                    }
+                }
+                
+                // Durum seçimini al
+                const statusRadio = document.querySelector('input[name="status"]:checked');
+                const status = statusRadio ? statusRadio.value : 'published';
+                
+                const pollData = {
+                    question,
+                    options,
+                    votes: {},
+                    image_url: imageUrl,
+                    end_date: endDate ? new Date(endDate).toISOString() : null,
+                    status: status
+                };
+                
+                if (currentEditingId) {
+                    // Düzenleme modunda mevcut resmi koru (eğer yeni resim yüklenmemişse)
+                    const currentPoll = allPolls.find(p => p.id === currentEditingId);
+                    if (!imageUrl && currentPoll && currentPoll.image_url) {
+                        pollData.image_url = currentPoll.image_url;
+                    }
+                    
+                    await updatePoll(currentEditingId, pollData);
+                    alert('Anket başarıyla güncellendi!');
+                } else {
+                    // Yeni ekleme
+                    await addPoll(pollData);
+                    const statusMessage = status === 'draft' ? 'taslak olarak kaydedildi' : 'yayınlandı';
+                    alert(`Anket başarıyla ${statusMessage}!`);
+                }
+                
+                closeModal('addPollModal');
+                resetForm();
+                await loadPolls();
+            } catch (error) {
+                alert('İşlem sırasında bir hata oluştu: ' + error.message);
+            }
+        });
+
+
+
+        // Seçenek ekleme
+        function addOption() {
+            addOptionToForm('');
+            updateRemoveButtons();
+        }
+
+        function addOptionToForm(value = '') {
+            const container = document.getElementById('optionsContainer');
+            const optionCount = container.children.length + 1;
+            
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'option-input-group';
+            optionDiv.innerHTML = `
+                <input type="text" class="option-input" placeholder="Seçenek ${optionCount}" value="${value}" required>
+                <button type="button" class="remove-option" onclick="removeOption(this)">✕</button>
+            `;
+            
+            container.appendChild(optionDiv);
+        }
+
+        // Seçenek silme
+        function removeOption(button) {
+            const container = document.getElementById('optionsContainer');
+            if (container.children.length > 2) {
+                button.parentElement.remove();
+                updateRemoveButtons();
+            }
+        }
+
+        // Silme butonlarını güncelle
+        function updateRemoveButtons() {
+            const container = document.getElementById('optionsContainer');
+            const removeButtons = container.querySelectorAll('.remove-option');
+            
+            removeButtons.forEach(button => {
+                button.style.display = container.children.length > 2 ? 'block' : 'none';
+            });
+        }
+
+        // Form sıfırlama
+        function resetForm() {
+            currentEditingId = null;
+            selectedPollImage = null;
+            document.getElementById('modalTitle').textContent = 'Yeni Anket Ekle';
+            document.getElementById('submitBtn').textContent = 'Anket Ekle';
+            document.getElementById('pollForm').reset();
+            
+            // Resim önizlemeyi temizle
+            document.getElementById('pollImagePreview').style.backgroundImage = '';
+            document.getElementById('pollImageFileName').textContent = 'Dosya seçilmedi';
+            
+            // Seçenekleri sıfırla
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = `
+                <div class="option-input-group">
+                    <input type="text" class="option-input" placeholder="Seçenek 1" required>
+                    <button type="button" class="remove-option" onclick="removeOption(this)" style="display: none;">✕</button>
+                </div>
+                <div class="option-input-group">
+                    <input type="text" class="option-input" placeholder="Seçenek 2" required>
+                    <button type="button" class="remove-option" onclick="removeOption(this)" style="display: none;">✕</button>
+                </div>
+            `;
+        }
+
+        // Admin çıkış
+        async function logoutAdmin() {
+            try {
+                await logout();
+                location.reload();
+            } catch (error) {
+                console.error('Çıkış yapma hatası:', error);
+                localStorage.removeItem('isAdminLoggedIn');
+                localStorage.removeItem('adminEmail');
+                location.reload();
+            }
+        }
+
+        // Modal işlemleri
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            if (modalId === 'addPollModal') {
+                resetForm();
+            }
+        }
+
+        // Modal dışına tıklanınca kapanma
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+                if (event.target.id === 'addPollModal') {
+                    resetForm();
+                }
+            }
+        }
+
+        // Oy geçmişini temizle (test amaçlı)
+        function clearVoteHistory() {
+            if (confirm('Oy geçmişi temizlensin mi? Bu işlem sonucunda anketlere tekrar oy verebilirsiniz.')) {
+                localStorage.removeItem('votedPolls');
+                votedPolls = [];
+                alert('Oy geçmişi temizlendi!');
+                loadPolls(); // Anketleri yeniden yükle
+            }
+        }
+
+        // Yardımcı fonksiyonlar
+        function showSpinner() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('pollsGrid').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'none';
+        }
+
+        function hideSpinner() {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('pollsGrid').style.display = 'grid';
+        }
+
+        function showEmptyState() {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('pollsGrid').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

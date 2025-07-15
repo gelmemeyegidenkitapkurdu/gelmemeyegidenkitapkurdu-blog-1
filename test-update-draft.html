@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taslak Röportaj Güncelleme Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Taslak röportaj güncelleme testi</h1>
+    <div id="result"></div>
+    
+    <script src="supabase-client.js"></script>
+    <script>
+        async function testUpdate() {
+            try {
+                initializeSupabase();
+                
+                console.log('Test başlıyor...');
+                
+                // Test verisi
+                const updatedInterview = {
+                    title: 'Buşra Balçık || Röportaj - Güncellenmiş',
+                    description: 'Gümüş Taht serisi ve Zehirli Gölge kitaplarının yazarı Buşra Balçık ile yapılan röportaj - Test güncellemesi',
+                    interviewer_name: 'Elif | gelmemeyegidenkitapkurdu',
+                    guest_name: 'Buşra Balçık',
+                    status: 'published' // taslaktan yayına çeviriyoruz
+                };
+                
+                console.log('Güncellenecek veri:', updatedInterview);
+                
+                // Güncelleme işlemi
+                const result = await updateWhatsAppInterview(6, updatedInterview);
+                
+                if (result) {
+                    document.getElementById('result').innerHTML = `
+                        <h2 style="color: green;">✅ Başarılı!</h2>
+                        <p>Röportaj başarıyla güncellendi</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                    console.log('Güncelleme başarılı:', result);
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <h2 style="color: red;">❌ Hata!</h2>
+                        <p>Röportaj güncellenirken hata oluştu</p>
+                    `;
+                    console.log('Güncelleme başarısız');
+                }
+                
+            } catch (error) {
+                console.error('Test hatası:', error);
+                document.getElementById('result').innerHTML = `
+                    <h2 style="color: red;">❌ Hata!</h2>
+                    <p>Test sırasında hata: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // Test'i çalıştır
+        testUpdate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Gelmemeyegiden Kitap Kurdu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 50%, #e1c9ff 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(147, 51, 234, 0.3);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-white {
+            background: white;
+            color: #9333ea;
+        }
+
+        .btn-white:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .welcome-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(147, 51, 234, 0.1);
+        }
+
+        .welcome-title {
+            color: #9333ea;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #9333ea, #ec4899);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+        }
+
+        .admin-sections {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .section-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(147, 51, 234, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.2);
+            border-color: #9333ea;
+        }
+
+        .section-icon {
+            font-size: 3rem;
+            color: #9333ea;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            color: #9333ea;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .section-desc {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            width: 100%;
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        .quick-actions {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(147, 51, 234, 0.1);
+        }
+
+        .quick-actions h3 {
+            color: #9333ea;
+            margin-bottom: 1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            background: #f3f4f6;
+            color: #9333ea;
+            border: 2px solid #e1c9ff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-action:hover {
+            background: #9333ea;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .admin-sections {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <a href="index.html" class="logo">📚 Admin Panel</a>
+        <div class="admin-info">
+            <span>👤 Admin</span>
+            <a href="index.html" class="btn btn-white">🏠 Ana Sayfa</a>
+            <a href="#" class="btn btn-white" onclick="logoutAdmin()">Çıkış Yap</a>
+        </div>
+    </header>
+
+    <!-- Ana İçerik -->
+    <main class="main-content">
+        <!-- Hoş Geldin Bölümü -->
+        <div class="welcome-section">
+            <h1 class="welcome-title">🎉 Hoş Geldin, Admin!</h1>
+            <p>Kitap blogunuzu yönetmek için gerekli tüm araçlar burada. İçerik oluşturun, düzenleyin ve sitenizi istediğiniz gibi şekillendirin.</p>
+        </div>
+
+        <!-- İstatistikler -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="postsCount">0</div>
+                <div class="stat-label">Toplam Yazı</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pollsCount">0</div>
+                <div class="stat-label">Toplam Anket</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="booksCount">0</div>
+                <div class="stat-label">Toplam Kitap</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="interviewsCount">0</div>
+                <div class="stat-label">Toplam Röportaj</div>
+            </div>
+        </div>
+
+        <!-- Hızlı İşlemler -->
+        <div class="quick-actions">
+            <h3>⚡ Hızlı İşlemler</h3>
+            <div class="action-buttons">
+                <a href="yazilar.html" class="btn-action">✏️ Yeni Yazı Ekle</a>
+                <a href="anketler.html" class="btn-action">📊 Yeni Anket Oluştur</a>
+                <a href="kitaplar.html" class="btn-action">📖 Kitap Ekle</a>
+                <a href="roportaj.html" class="btn-action">🎤 Röportaj Ekle</a>
+            </div>
+        </div>
+
+        <!-- Veri Yönetimi -->
+        <div class="quick-actions">
+            <h3>💾 Veri Yönetimi</h3>
+            <div class="action-buttons">
+                <button class="btn-action" onclick="createManualBackup()">🔄 Manuel Yedek Oluştur</button>
+                <button class="btn-action" onclick="downloadDataBackup()">📥 Verileri İndir</button>
+                <button class="btn-action" onclick="showDataStatus()">📊 Veri Durumu</button>
+            </div>
+        </div>
+
+        <!-- Admin Bölümleri -->
+        <div class="admin-sections">
+            <div class="section-card">
+                <div class="section-icon">📝</div>
+                <h3 class="section-title">Yazı Yönetimi</h3>
+                <p class="section-desc">Kitap incelemeleri, edebiyat yazıları ve blog gönderilerinizi oluşturun, düzenleyin ve yönetin.</p>
+                <a href="yazilar.html" class="btn btn-primary">Yazıları Yönet</a>
+            </div>
+
+            <div class="section-card">
+                <div class="section-icon">📊</div>
+                <h3 class="section-title">Anket Yönetimi</h3>
+                <p class="section-desc">Okuyucularınızla etkileşim kurmak için anketler oluşturun ve sonuçları analiz edin.</p>
+                <a href="anketler.html" class="btn btn-primary">Anketleri Yönet</a>
+            </div>
+
+            <div class="section-card">
+                <div class="section-icon">📖</div>
+                <h3 class="section-title">Kitap Arşivi</h3>
+                <p class="section-desc">PDF kitaplar ekleyin, kitap önerilerinizi paylaşın ve dijital kütüphanenizi yönetin.</p>
+                <a href="kitaplar.html" class="btn btn-primary">Kitapları Yönet</a>
+            </div>
+
+            <div class="section-card">
+                <div class="section-icon">🎤</div>
+                <h3 class="section-title">Röportaj Köşesi</h3>
+                <p class="section-desc">Yazarlarla yaptığınız röportajları, söyleşileri ve özel içerikleri yayınlayın.</p>
+                <a href="roportaj.html" class="btn btn-primary">Röportajları Yönet</a>
+            </div>
+
+            <div class="section-card">
+                <div class="section-icon">👤</div>
+                <h3 class="section-title">Profil & Hakkımda</h3>
+                <p class="section-desc">Hakkımda sayfanızı düzenleyin, profil bilgilerinizi güncelleyin ve iletişim bilgilerini yönetin.</p>
+                <a href="hakkimda.html" class="btn btn-primary">Profili Düzenle</a>
+            </div>
+
+            <div class="section-card">
+                <div class="section-icon">🎨</div>
+                <h3 class="section-title">Site Ayarları</h3>
+                <p class="section-desc">Sitenizin görünümünü, renklerini ve genel ayarlarını kişiselleştirin.</p>
+                <a href="#" class="btn btn-primary" onclick="alert('Bu özellik yakında eklenecek!')">Ayarları Düzenle</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="data-persistence.js"></script>
+    <script>
+        // Sayfa yüklendiğinde admin kontrolü
+        document.addEventListener('DOMContentLoaded', function() {
+            const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+            if (!isAdminLoggedIn) {
+                alert('Bu sayfaya erişim için admin girişi gereklidir!');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            loadStats();
+        });
+
+        // İstatistikleri yükle
+        function loadStats() {
+            const posts = loadData('blogPosts', []);
+            const polls = loadData('blogPolls', []);
+            const books = loadData('blogBooks', []);
+            const interviews = loadData('blogInterviews', []);
+            
+            document.getElementById('postsCount').textContent = posts.length;
+            document.getElementById('pollsCount').textContent = polls.length;
+            document.getElementById('booksCount').textContent = books.length;
+            document.getElementById('interviewsCount').textContent = interviews.length;
+        }
+
+        // Admin çıkışı
+        function logoutAdmin() {
+            if (confirm('Admin panelinden çıkış yapmak istediğinizden emin misiniz?')) {
+                localStorage.removeItem('isAdminLoggedIn');
+                localStorage.removeItem('adminEmail');
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Manuel yedek oluştur
+        function createManualBackup() {
+            if (window.dataPersistence && window.dataPersistence.createBackup()) {
+                alert('✅ Veri yedeği başarıyla oluşturuldu!\n\nVerileriniz otomatik olarak korunuyor.');
+            } else {
+                alert('❌ Yedek oluşturulurken bir hata oluştu.');
+            }
+        }
+
+        // Veri durumunu göster
+        function showDataStatus() {
+            const posts = loadData('blogPosts', []);
+            const polls = loadData('blogPolls', []);
+            const books = loadData('blogBooks', []);
+            const interviews = loadData('blogInterviews', []);
+            const lastBackup = localStorage.getItem('lastBackupTime');
+            
+            let statusMessage = '📊 Veri Durumu:\n\n';
+            statusMessage += `📝 Yazılar: ${posts.length}\n`;
+            statusMessage += `📊 Anketler: ${polls.length}\n`;
+            statusMessage += `📖 Kitaplar: ${books.length}\n`;
+            statusMessage += `🎤 Röportajlar: ${interviews.length}\n\n`;
+            
+            if (lastBackup) {
+                const backupDate = new Date(lastBackup);
+                statusMessage += `💾 Son Yedek: ${backupDate.toLocaleString('tr-TR')}\n\n`;
+            } else {
+                statusMessage += '💾 Henüz yedek oluşturulmamış\n\n';
+            }
+            
+            statusMessage += '✅ Otomatik yedekleme aktif\n';
+            statusMessage += '🔄 Her 30 dakikada bir yedekleniyor\n';
+            statusMessage += '💡 Sayfa kapatılırken otomatik yedeklenir';
+            
+            alert(statusMessage);
+        }
+    </script>
+</body>
+</html>

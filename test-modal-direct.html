@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modal Test</title>
+</head>
+<body>
+    <h1>Modal açılıyor...</h1>
+    <script>
+        // Admin durumunu localStorage'a kaydet
+        localStorage.setItem('isAdminLoggedIn', 'true');
+        localStorage.setItem('adminEmail', 'gelmemeyegidenkitapkurdu@gmail.com');
+        
+        // 2 saniye sonra röportaj sayfasına yönlendir
+        setTimeout(function() {
+            const url = 'roportaj-detail.html?id=6';
+            window.location.href = url;
+            
+            // Sayfa yüklendikten sonra modal açma script'i ekle
+            setTimeout(function() {
+                // JavaScript ile butona tıklama simülasyonu
+                try {
+                    const editBtn = document.getElementById('editInterviewBtn');
+                    if (editBtn) {
+                        console.log('Edit butonu bulundu, tıklanıyor...');
+                        editBtn.click();
+                    } else {
+                        console.log('Edit butonu bulunamadı');
+                    }
+                } catch (error) {
+                    console.error('Buton tıklama hatası:', error);
+                }
+            }, 4000); // Sayfa yüklenmesi için 4 saniye bekle
+        }, 1000);
+    </script>
+</body>
+</html>

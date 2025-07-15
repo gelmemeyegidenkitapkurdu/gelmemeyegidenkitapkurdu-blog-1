@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct 2FA Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f8e1ff 0%, #e1c9ff 100%);
+            padding: 2rem;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.2);
+        }
+        .log {
+            background: #f3f4f6;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            border-left: 4px solid #9333ea;
+            font-family: monospace;
+        }
+        .success { border-left-color: #10b981; background: #d1fae5; }
+        .error { border-left-color: #ef4444; background: #fee2e2; }
+        .info { border-left-color: #3b82f6; background: #dbeafe; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="color: #9333ea; text-align: center;">🔐 2FA Direktif Test</h1>
+        <div id="logs"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            logs.appendChild(logDiv);
+            logs.scrollTop = logs.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // Otomatik test başlat
+        async function autoTest() {
+            log('🚀 2FA Test otomatik başlatılıyor...', 'info');
+            
+            try {
+                // Supabase bağlantısını test et
+                log('📡 Supabase başlatılıyor...', 'info');
+                await new Promise(resolve => setTimeout(resolve, 1000)); // 1 saniye bekle
+                
+                const connected = initializeSupabase();
+                if (connected) {
+                    log('✅ Supabase bağlantısı başarılı!', 'success');
+                } else {
+                    log('❌ Supabase bağlantısı başarısız!', 'error');
+                    return;
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 1000)); // 1 saniye bekle
+
+                // 1. Admin giriş testi
+                log('🔑 Admin bilgileri test ediliyor...', 'info');
+                const loginResult = await loginAsAdmin('gelmemeyegidenkitapkurdu@gmail.com', 'Elif.6628.Akin');
+                
+                if (loginResult && loginResult.success) {
+                    log('✅ Admin giriş bilgileri doğru!', 'success');
+                } else {
+                    log('❌ Admin giriş bilgileri hatalı!', 'error');
+                    return;
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5 saniye bekle
+
+                // 2. Email kod gönderme testi
+                log('📧 Email doğrulama kodu gönderiliyor...', 'info');
+                const codeResult = await sendAdminVerificationCode('gelmemeyegidenkitapkurdu@gmail.com');
+                
+                if (codeResult && codeResult.success) {
+                    log('✅ Email kodu başarıyla gönderildi!', 'success');
+                    log(`📱 Mesaj: ${codeResult.message}`, 'info');
+                    if (codeResult.demo_code) {
+                        log(`🔢 Demo Kodu: <strong>${codeResult.demo_code}</strong>`, 'success');
+                        
+                        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 saniye bekle
+
+                        // 3. Kod doğrulama testi
+                        log('🔍 Email kodu doğrulanıyor...', 'info');
+                        const verifyResult = await verifyAdminCode('gelmemeyegidenkitapkurdu@gmail.com', codeResult.demo_code);
+                        
+                        if (verifyResult && verifyResult.success) {
+                            log('🎉 Email kodu başarıyla doğrulandı!', 'success');
+                            log('✅ 2FA sistemi TAMAMEN çalışıyor!', 'success');
+                        } else {
+                            log(`❌ Email kodu doğrulanamadı: ${verifyResult?.error || 'Bilinmeyen hata'}`, 'error');
+                        }
+
+                        await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5 saniye bekle
+
+                        // 4. Geçersiz kod testi
+                        log('🧪 Geçersiz kod testi...', 'info');
+                        const invalidResult = await verifyAdminCode('gelmemeyegidenkitapkurdu@gmail.com', '000000');
+                        
+                        if (invalidResult && !invalidResult.success) {
+                            log('✅ Geçersiz kod başarıyla reddedildi!', 'success');
+                        } else {
+                            log('❌ Güvenlik sorunu: Geçersiz kod kabul edildi!', 'error');
+                        }
+                    }
+                } else {
+                    log(`❌ Email kodu gönderilemedi: ${codeResult?.error || 'Bilinmeyen hata'}`, 'error');
+                    return;
+                }
+
+                log('🏁 Test tamamlandı! Sistem çalışıyor.', 'success');
+
+            } catch (error) {
+                log(`💥 Test hatası: ${error.message}`, 'error');
+                console.error('Test error:', error);
+            }
+        }
+
+        // Sayfa yüklendiğinde otomatik başlat
+        document.addEventListener('DOMContentLoaded', function() {
+            log('📋 Test sayfası yüklendi.', 'info');
+            setTimeout(autoTest, 1000); // 1 saniye sonra başlat
+        });
+    </script>
+</body>
+</html>

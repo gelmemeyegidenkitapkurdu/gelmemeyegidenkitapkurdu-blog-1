@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin 2FA Test - Gelmemeyegiden Kitap Kurdu</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f8e1ff 0%, #e1c9ff 100%);
+            padding: 2rem;
+        }
+        .test-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.2);
+        }
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e1c9ff;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        input:focus {
+            outline: none;
+            border-color: #9333ea;
+        }
+        .step {
+            display: none;
+        }
+        .step.active {
+            display: block;
+        }
+        .demo-code {
+            background: #fef3c7;
+            color: #ec4899;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-weight: bold;
+            text-align: center;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            text-align: center;
+        }
+        .error {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="color: #9333ea; text-align: center; margin-bottom: 2rem;">🔐 Admin 2FA Test</h1>
+        
+        <!-- Adım 1: Email ve Şifre -->
+        <div id="step1" class="step active">
+            <h3 style="color: #9333ea;">Adım 1: Giriş Bilgileri</h3>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Admin E-mail:</label>
+                    <input type="email" id="adminEmail" value="gelmemeyegidenkitapkurdu@gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Admin Şifre:</label>
+                    <input type="password" id="adminPassword" value="Elif.6628.Akin" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Devam Et</button>
+            </form>
+        </div>
+
+        <!-- Adım 2: Email Doğrulama -->
+        <div id="step2" class="step">
+            <h3 style="color: #9333ea;">Adım 2: Email Doğrulama</h3>
+            <p>E-mail adresinize 6 haneli doğrulama kodu gönderildi.</p>
+            <div id="demoCodeDisplay" class="demo-code" style="display: none;">
+                Demo Kodu: <span id="demoCodeValue"></span>
+            </div>
+            <form id="verifyForm">
+                <div class="form-group">
+                    <label>Doğrulama Kodu:</label>
+                    <input type="text" id="verificationCode" maxlength="6" placeholder="6 haneli kod" required 
+                           style="text-align: center; font-size: 1.5rem; letter-spacing: 0.3rem;">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="button" onclick="goBackToStep1()" class="btn btn-secondary" style="flex: 1;">
+                        ← Geri
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 2;">
+                        Doğrula
+                    </button>
+                </div>
+                <button type="button" onclick="resendCode()" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">
+                    Kodu Tekrar Gönder
+                </button>
+            </form>
+        </div>
+
+        <!-- Sonuç -->
+        <div id="result"></div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script>
+        let currentEmail = '';
+        let currentPassword = '';
+
+        // Supabase'i başlat
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSupabase();
+        });
+
+        // Adım 1 - Giriş bilgileri kontrolü
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            currentEmail = email;
+            currentPassword = password;
+            
+            showResult('📤 Giriş bilgileri kontrol ediliyor...', 'info');
+            
+            try {
+                // Önce normal giriş kontrol et
+                const loginResult = await loginAsAdmin(email, password);
+                
+                if (loginResult.success) {
+                    showResult('✅ Giriş bilgileri doğru! Email kodu gönderiliyor...', 'info');
+                    
+                    // Email kodu gönder
+                    const codeResult = await sendAdminVerificationCode(email);
+                    
+                    if (codeResult.success) {
+                        // Demo kodu göster
+                        if (codeResult.demo_code) {
+                            document.getElementById('demoCodeValue').textContent = codeResult.demo_code;
+                            document.getElementById('demoCodeDisplay').style.display = 'block';
+                        }
+                        
+                        showResult('📧 ' + codeResult.message, 'success');
+                        showStep(2);
+                        
+                        // Kod alanına odaklan
+                        setTimeout(() => {
+                            document.getElementById('verificationCode').focus();
+                        }, 100);
+                    } else {
+                        showResult('❌ ' + codeResult.error, 'error');
+                    }
+                } else {
+                    showResult('❌ Hatalı admin bilgileri!', 'error');
+                }
+            } catch (error) {
+                showResult('❌ Hata: ' + error.message, 'error');
+            }
+        });
+
+        // Adım 2 - Kod doğrulama
+        document.getElementById('verifyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const code = document.getElementById('verificationCode').value;
+            
+            if (code.length !== 6) {
+                showResult('❌ Lütfen 6 haneli kodu giriniz!', 'error');
+                return;
+            }
+            
+            showResult('🔍 Kod doğrulanıyor...', 'info');
+            
+            try {
+                const verifyResult = await verifyAdminCode(currentEmail, code);
+                
+                if (verifyResult.success) {
+                    showResult('🎉 Başarılı! Admin olarak giriş yapıldı. Güvenlik doğrulaması tamamlandı!', 'success');
+                } else {
+                    showResult('❌ ' + verifyResult.error, 'error');
+                    document.getElementById('verificationCode').value = '';
+                    document.getElementById('verificationCode').focus();
+                }
+            } catch (error) {
+                showResult('❌ Hata: ' + error.message, 'error');
+            }
+        });
+
+        function showStep(stepNumber) {
+            document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+            document.getElementById('step' + stepNumber).classList.add('active');
+        }
+
+        function goBackToStep1() {
+            showStep(1);
+            document.getElementById('demoCodeDisplay').style.display = 'none';
+            clearResult();
+        }
+
+        async function resendCode() {
+            showResult('📤 Kod tekrar gönderiliyor...', 'info');
+            
+            try {
+                const codeResult = await sendAdminVerificationCode(currentEmail);
+                
+                if (codeResult.success) {
+                    // Demo kodu güncelle
+                    if (codeResult.demo_code) {
+                        document.getElementById('demoCodeValue').textContent = codeResult.demo_code;
+                        document.getElementById('demoCodeDisplay').style.display = 'block';
+                    }
+                    
+                    document.getElementById('verificationCode').value = '';
+                    document.getElementById('verificationCode').focus();
+                    showResult('🔄 ' + codeResult.message, 'success');
+                } else {
+                    showResult('❌ ' + codeResult.error, 'error');
+                }
+            } catch (error) {
+                showResult('❌ Hata: ' + error.message, 'error');
+            }
+        }
+
+        function showResult(message, type) {
+            const result = document.getElementById('result');
+            result.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        function clearResult() {
+            document.getElementById('result').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hakkımda - Gelmemeyegiden Kitap Kurdu</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 50%, #e1c9ff 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Üst navigasyon */
+        .top-nav {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(147, 51, 234, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #9333ea;
+            text-decoration: none;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #9333ea;
+            border: 2px solid #9333ea;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        /* Ana başlık */
+        .page-header {
+            background: linear-gradient(135deg, #9333ea, #ec4899);
+            color: white;
+            text-align: center;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .page-description {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Admin kontrolleri */
+        .admin-controls {
+            background: white;
+            padding: 1.5rem;
+            margin: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(147, 51, 234, 0.1);
+            border: 2px solid #e1c9ff;
+            display: none;
+        }
+
+        .admin-controls.show {
+            display: block;
+        }
+
+        .admin-controls h3 {
+            color: #9333ea;
+            margin-bottom: 1rem;
+        }
+
+        /* Ana içerik */
+        .main-content {
+            background: white;
+            margin: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.15);
+            overflow: hidden;
+        }
+
+        /* Profil bölümü */
+        .profile-section {
+            padding: 3rem 2rem;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        .profile-image-section {
+            text-align: center;
+        }
+
+        .profile-image {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid #9333ea;
+            margin-bottom: 1.5rem;
+        }
+
+        .default-avatar {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+            margin: 0 auto 1.5rem;
+            border: 5px solid #9333ea;
+        }
+
+        .profile-info h2 {
+            color: #9333ea;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-title {
+            color: #ec4899;
+            font-size: 1.2rem;
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .profile-bio {
+            color: #333;
+            line-height: 1.8;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* İletişim bilgileri */
+        .contact-section {
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 100%);
+            padding: 2rem;
+            margin: 2rem;
+            border-radius: 15px;
+            border: 2px solid #e1c9ff;
+        }
+
+        .contact-section h3 {
+            color: #9333ea;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .contact-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 2px solid #e1c9ff;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .contact-item:hover {
+            border-color: #9333ea;
+            transform: translateY(-2px);
+        }
+
+        .contact-icon {
+            font-size: 1.5rem;
+            color: #9333ea;
+        }
+
+        .contact-info {
+            flex: 1;
+        }
+
+        .contact-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .contact-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .contact-link {
+            color: #9333ea;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .contact-link:hover {
+            color: #ec4899;
+        }
+
+        /* Sosyal medya */
+        .social-section {
+            background: white;
+            padding: 2rem;
+            margin: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(147, 51, 234, 0.1);
+            border: 2px solid #e1c9ff;
+        }
+
+        .social-section h3 {
+            color: #9333ea;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        /* Modal stilleri */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #9333ea;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #9333ea;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1c9ff;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #9333ea;
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        /* Boş durum */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            color: #9333ea;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        /* File input custom styling */
+        .file-input-container {
+            position: relative;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        .file-input {
+            position: absolute;
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .file-name {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .image-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 1rem auto;
+            background-color: #f0f0f0;
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #9333ea;
+            overflow: hidden;
+        }
+
+        .contact-type-container {
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #e1c9ff;
+            padding-bottom: 1rem;
+        }
+
+        .contact-type-title {
+            color: #9333ea;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .profile-section {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                text-align: center;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                margin: 1rem;
+            }
+
+            .profile-image,
+            .default-avatar {
+                width: 200px;
+                height: 200px;
+            }
+
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .social-links {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #9333ea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Admin giriş düğmesi - sadece admin yoksa görünür */
+        .admin-login-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 1rem 1.5rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .admin-login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(147, 51, 234, 0.4);
+        }
+
+        .admin-login-btn.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Üst Navigasyon -->
+    <nav class="top-nav">
+        <a href="index.html" class="logo">📚 Kitap Kurdu</a>
+        <div class="auth-buttons" id="authButtons">
+            <a href="index.html" class="btn btn-secondary">Ana Sayfa</a>
+        </div>
+    </nav>
+
+    <!-- Sayfa Başlığı -->
+    <header class="page-header">
+        <h1 class="page-title">👤 Hakkımda</h1>
+        <p class="page-description">Blog sahibi hakkında bilgiler ve iletişim</p>
+    </header>
+
+    <!-- Admin Kontrolleri (sadece admin girişi yaptığında görünür) -->
+    <div class="admin-controls" id="adminControls">
+        <h3>Admin Kontrolleri</h3>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="openProfileEditModal()" id="editProfileBtn">
+                ✏️ Bilgilerimi Düzenle
+            </button>
+            <button class="btn btn-secondary" onclick="clearProfile()" id="clearProfileBtn">
+                🗑️ Profili Temizle
+            </button>
+            <button class="btn btn-secondary" onclick="previewProfile()" id="previewProfileBtn">
+                👁️ Önizleme
+            </button>
+        </div>
+    </div>
+
+    <!-- Ana İçerik -->
+    <main class="main-content">
+        <div id="loadingSpinner" class="spinner"></div>
+        
+        <!-- Profil Bölümü -->
+        <div class="profile-section" id="profileSection" style="display: none;">
+            <div class="profile-image-section">
+                <div id="profileImageContainer">
+                    <!-- Profil resmi dinamik olarak yüklenecek -->
+                </div>
+            </div>
+            
+            <div class="profile-info">
+                <h2 id="profileName">İsim yüklenirken...</h2>
+                <p class="profile-title" id="profileTitle">Unvan yüklenirken...</p>
+                <div class="profile-bio" id="profileBio">
+                    Biyografi yüklenirken...
+                </div>
+            </div>
+        </div>
+
+        <!-- Boş durum -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <h3>Henüz profil bilgisi eklenmemiş</h3>
+            <p>Bu sayfa yakında içerikle doldurulacak.</p>
+        </div>
+    </main>
+
+    <!-- İletişim Bölümü -->
+    <section class="contact-section" id="contactSection" style="display: none;">
+        <h3>📞 İletişim Bilgileri</h3>
+        <div class="contact-grid" id="contactGrid">
+            <!-- İletişim bilgileri dinamik olarak yüklenecek -->
+        </div>
+    </section>
+
+    <!-- Sosyal Medya Bölümü -->
+    <section class="social-section" id="socialSection" style="display: none;">
+        <h3>🌐 Sosyal Medya</h3>
+        <div class="social-links" id="socialLinks">
+            <!-- Sosyal medya linkleri dinamik olarak yüklenecek -->
+        </div>
+    </section>
+
+    <!-- Floating Admin Girişi Düğmesi -->
+    <button class="admin-login-btn" id="adminLoginBtn" onclick="openModal('adminModal')">
+        🔐 Admin Girişi
+    </button>
+
+    <!-- Admin Giriş Modalı -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('adminModal')">&times;</span>
+            <h2 style="color: #9333ea; margin-bottom: 1.5rem;">Admin Girişi</h2>
+            <form id="adminForm">
+                <div class="form-group">
+                    <label>Admin E-mail:</label>
+                    <input type="email" id="adminEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Admin Şifre:</label>
+                    <input type="password" id="adminPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Admin Girişi</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Profil Düzenleme Modalı -->
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editProfileModal')">&times;</span>
+            <h2 style="color: #9333ea; margin-bottom: 1.5rem;">Profil Bilgilerini Düzenle</h2>
+            <form id="profileForm">
+                <div class="file-input-container">
+                    <div class="image-preview" id="imagePreview"></div>
+                    <label for="profileImage" class="file-input-label">📷 Profil Resmi Seç</label>
+                    <input type="file" id="profileImage" class="file-input" accept="image/*">
+                    <div class="file-name" id="fileName">Dosya seçilmedi</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>İsim:</label>
+                    <input type="text" id="editName" required placeholder="Adınız ve soyadınız">
+                </div>
+                <div class="form-group">
+                    <label>Unvan/Başlık:</label>
+                    <input type="text" id="editTitle" placeholder="Örn: Kitap Blogger, Yazar">
+                </div>
+                <div class="form-group">
+                    <label>Biyografi:</label>
+                    <textarea id="editBio" placeholder="Kendiniz hakkında bilgi yazın..."></textarea>
+                </div>
+                
+                <h3 style="color: #9333ea; margin: 1.5rem 0 1rem;">İletişim Bilgileri</h3>
+                
+                <div id="contactOptions">
+                    <div class="contact-type-container">
+                        <div class="contact-type-title">E-posta İletişimi</div>
+                        <div class="form-group">
+                            <label>E-mail:</label>
+                            <input type="email" id="editEmail" placeholder="E-posta adresiniz">
+                        </div>
+                    </div>
+                    
+                    <div class="contact-type-container">
+                        <div class="contact-type-title">Telefon İletişimi</div>
+                        <div class="form-group">
+                            <label>Telefon:</label>
+                            <input type="tel" id="editPhone" placeholder="Telefon numaranız">
+                        </div>
+                    </div>
+                    
+                    <div class="contact-type-container">
+                        <div class="contact-type-title">Diğer İletişim Yöntemi</div>
+                        <div class="form-group">
+                            <label>İletişim Türü:</label>
+                            <select id="customContactType">
+                                <option value="">Seçiniz...</option>
+                                <option value="whatsapp">WhatsApp</option>
+                                <option value="telegram">Telegram</option>
+                                <option value="website">Web Sitesi</option>
+                                <option value="address">Adres</option>
+                                <option value="other">Diğer</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="customContactValueContainer" style="display: none;">
+                            <label id="customContactLabel">İletişim Bilgisi:</label>
+                            <input type="text" id="customContactValue" placeholder="İletişim bilgisini girin">
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="color: #9333ea; margin: 1.5rem 0 1rem;">Sosyal Medya</h3>
+                
+                <div class="form-group">
+                    <label>Instagram:</label>
+                    <input type="url" id="editInstagram" placeholder="https://instagram.com/kullaniciadi">
+                </div>
+                <div class="form-group">
+                    <label>TikTok:</label>
+                    <input type="url" id="editTiktok" placeholder="https://tiktok.com/@kullaniciadi">
+                </div>
+                <div class="form-group">
+                    <label>Twitter:</label>
+                    <input type="url" id="editTwitter" placeholder="https://twitter.com/kullaniciadi">
+                </div>
+                <div class="form-group">
+                    <label>YouTube:</label>
+                    <input type="url" id="editYoutube" placeholder="https://youtube.com/@kanaladi">
+                </div>
+                <div class="form-group">
+                    <label>Facebook:</label>
+                    <input type="url" id="editFacebook" placeholder="https://facebook.com/kullaniciadi">
+                </div>
+                <div class="form-group">
+                    <label>LinkedIn:</label>
+                    <input type="url" id="editLinkedin" placeholder="https://linkedin.com/in/kullaniciadi">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Profil Güncelle</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script>
+        let currentProfile = null;
+        let selectedProfileImage = null;
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                initializeSupabase();
+                await checkAdminStatus();
+                await loadProfile();
+            } catch (error) {
+                console.error('Başlatma hatası:', error);
+                hideSpinner();
+                showEmptyState();
+            }
+            
+            // Profil resmi önizleme
+            document.getElementById('profileImage').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    selectedProfileImage = file;
+                    document.getElementById('fileName').textContent = file.name;
+                    
+                    // Resim önizleme
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('imagePreview').style.backgroundImage = `url('${e.target.result}')`;
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Özel iletişim türü değişikliği
+            document.getElementById('customContactType').addEventListener('change', function() {
+                const selectedType = this.value;
+                const valueContainer = document.getElementById('customContactValueContainer');
+                const labelElement = document.getElementById('customContactLabel');
+                
+                if (selectedType) {
+                    valueContainer.style.display = 'block';
+                    
+                    // Label'ı güncelle
+                    switch(selectedType) {
+                        case 'whatsapp':
+                            labelElement.textContent = 'WhatsApp Numarası:';
+                            break;
+                        case 'telegram':
+                            labelElement.textContent = 'Telegram Kullanıcı Adı:';
+                            break;
+                        case 'website':
+                            labelElement.textContent = 'Web Sitesi URL:';
+                            break;
+                        case 'address':
+                            labelElement.textContent = 'Adres:';
+                            break;
+                        default:
+                            labelElement.textContent = 'İletişim Bilgisi:';
+                    }
+                } else {
+                    valueContainer.style.display = 'none';
+                }
+            });
+        });
+
+        // Admin durumunu kontrol et
+        async function checkAdminStatus() {
+            const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+            const adminEmail = localStorage.getItem('adminEmail');
+            
+            if (isAdminLoggedIn && adminEmail === 'gelmemeyegidenkitapkurdu@gmail.com') {
+                // localStorage'da admin durumu var, gerçek auth kontrolü yap
+                try {
+                    const session = await checkSession();
+                    if (!session.isLoggedIn) {
+                        // Session yoksa admin girişi yap
+                        console.log('Admin auth token bulunamadı, giriş yapılıyor...');
+                        const loginResult = await loginAsAdmin('gelmemeyegidenkitapkurdu@gmail.com', 'Elif.6628.Akin');
+                        if (loginResult.success) {
+                            console.log('Admin auth başarılı');
+                            updateUIForAdmin();
+                        } else {
+                            console.log('Admin auth başarısız:', loginResult.message);
+                            document.getElementById('adminLoginBtn').classList.add('show');
+                        }
+                    } else {
+                        console.log('Mevcut admin session bulundu');
+                        updateUIForAdmin();
+                    }
+                } catch (authError) {
+                    console.log('Auth hatası, localStorage kontrolü kullanılıyor:', authError);
+                    updateUIForAdmin(); // Fallback olarak localStorage'a güven
+                }
+            } else {
+                // Admin girişi butonunu göster
+                document.getElementById('adminLoginBtn').classList.add('show');
+            }
+        }
+
+        // Admin UI güncellemesi
+        function updateUIForAdmin() {
+            const authButtons = document.getElementById('authButtons');
+            authButtons.innerHTML = `
+                <a href="index.html" class="btn btn-secondary">Ana Sayfa</a>
+                <a href="admin-panel.html" class="btn btn-primary">🔧 Admin Panel</a>
+                <a href="#" class="btn btn-secondary" onclick="logoutAdmin()">Çıkış Yap</a>
+            `;
+            
+            // Admin kontrollerini göster
+            document.getElementById('adminControls').classList.add('show');
+            
+            // Admin girişi butonunu gizle
+            document.getElementById('adminLoginBtn').classList.remove('show');
+        }
+
+        // Profil bilgilerini yükle
+        async function loadProfile() {
+            try {
+                showSpinner();
+                currentProfile = await getProfile();
+                
+                if (currentProfile) {
+                    displayProfile(currentProfile);
+                } else {
+                    showEmptyState();
+                }
+                
+                hideSpinner();
+            } catch (error) {
+                console.error('Profil yükleme hatası:', error);
+                hideSpinner();
+                showEmptyState();
+            }
+        }
+
+        // Profil bilgilerini göster
+        function displayProfile(profile) {
+            // Ana profil bölümü
+            document.getElementById('profileName').textContent = profile.name || 'İsim belirtilmemiş';
+            document.getElementById('profileTitle').textContent = profile.title || 'Unvan belirtilmemiş';
+            document.getElementById('profileBio').textContent = profile.bio || 'Henüz biyografi eklenmemiş.';
+            
+            // Profil resmi
+            const imageContainer = document.getElementById('profileImageContainer');
+            if (profile.image) {
+                imageContainer.innerHTML = `<img src="${profile.image}" alt="Profil resmi" class="profile-image">`;
+            } else {
+                imageContainer.innerHTML = `<div class="default-avatar">👤</div>`;
+            }
+            
+            // İletişim bilgileri
+            displayContactInfo(profile);
+            
+            // Sosyal medya
+            displaySocialMedia(profile);
+            
+            // Bölümleri göster
+            document.getElementById('profileSection').style.display = 'grid';
+            document.getElementById('emptyState').style.display = 'none';
+        }
+
+        // İletişim bilgilerini göster
+        function displayContactInfo(profile) {
+            const contactGrid = document.getElementById('contactGrid');
+            const contactSection = document.getElementById('contactSection');
+            
+            let hasContact = false;
+            let contactHtml = '';
+            
+            if (profile.email) {
+                hasContact = true;
+                contactHtml += `
+                    <div class="contact-item">
+                        <div class="contact-icon">📧</div>
+                        <div class="contact-info">
+                            <div class="contact-label">E-mail</div>
+                            <div class="contact-value">
+                                <a href="mailto:${profile.email}" class="contact-link">${profile.email}</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (profile.phone) {
+                hasContact = true;
+                contactHtml += `
+                    <div class="contact-item">
+                        <div class="contact-icon">📞</div>
+                        <div class="contact-info">
+                            <div class="contact-label">Telefon</div>
+                            <div class="contact-value">
+                                <a href="tel:${profile.phone}" class="contact-link">${profile.phone}</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Özel iletişim yöntemi
+            if (profile.custom_contact_type && profile.custom_contact_value) {
+                hasContact = true;
+                let icon = '📝';
+                let label = 'İletişim';
+                let valueHtml = profile.custom_contact_value;
+                
+                // İletişim türüne göre özel ayarlar
+                switch(profile.custom_contact_type) {
+                    case 'whatsapp':
+                        icon = '💬';
+                        label = 'WhatsApp';
+                        valueHtml = `<a href="https://wa.me/${profile.custom_contact_value.replace(/\D/g,'')}" class="contact-link">${profile.custom_contact_value}</a>`;
+                        break;
+                    case 'telegram':
+                        icon = '📱';
+                        label = 'Telegram';
+                        valueHtml = `<a href="https://t.me/${profile.custom_contact_value.replace('@', '')}" class="contact-link">${profile.custom_contact_value}</a>`;
+                        break;
+                    case 'website':
+                        icon = '🌐';
+                        label = 'Web Sitesi';
+                        valueHtml = `<a href="${profile.custom_contact_value}" class="contact-link" target="_blank">${profile.custom_contact_value}</a>`;
+                        break;
+                    case 'address':
+                        icon = '📍';
+                        label = 'Adres';
+                        valueHtml = profile.custom_contact_value;
+                        break;
+                }
+                
+                contactHtml += `
+                    <div class="contact-item">
+                        <div class="contact-icon">${icon}</div>
+                        <div class="contact-info">
+                            <div class="contact-label">${label}</div>
+                            <div class="contact-value">${valueHtml}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (hasContact) {
+                contactGrid.innerHTML = contactHtml;
+                contactSection.style.display = 'block';
+            } else {
+                contactSection.style.display = 'none';
+            }
+        }
+
+        // Sosyal medya linklerini göster
+        function displaySocialMedia(profile) {
+            const socialLinks = document.getElementById('socialLinks');
+            const socialSection = document.getElementById('socialSection');
+            
+            let hasSocial = false;
+            let socialHtml = '';
+            
+            const socialPlatforms = [
+                { key: 'instagram', name: 'Instagram', icon: '📷' },
+                { key: 'tiktok', name: 'TikTok', icon: '🎵' },
+                { key: 'twitter', name: 'Twitter', icon: '🐦' },
+                { key: 'youtube', name: 'YouTube', icon: '📹' },
+                { key: 'facebook', name: 'Facebook', icon: '📘' },
+                { key: 'linkedin', name: 'LinkedIn', icon: '💼' }
+            ];
+            
+            socialPlatforms.forEach(platform => {
+                if (profile[platform.key]) {
+                    hasSocial = true;
+                    socialHtml += `
+                        <a href="${profile[platform.key]}" target="_blank" class="social-link">
+                            <span>${platform.icon}</span>
+                            <span>${platform.name}</span>
+                        </a>
+                    `;
+                }
+            });
+            
+            if (hasSocial) {
+                socialLinks.innerHTML = socialHtml;
+                socialSection.style.display = 'block';
+            } else {
+                socialSection.style.display = 'none';
+            }
+        }
+
+        // Admin giriş işlemi
+        document.getElementById('adminForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            try {
+                // Önce admin kullanıcısını kayıt et (eğer yoksa)
+                const signUpResult = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                });
+                
+                // Sonra giriş yap
+                const loginResult = await loginAsAdmin(email, password);
+                
+                if (loginResult.success) {
+                    alert('Admin girişi başarılı!');
+                    closeModal('adminModal');
+                    updateUIForAdmin();
+                    await loadProfile(); // Profili yeniden yükle
+                } else {
+                    alert('Hatalı admin bilgileri: ' + (loginResult.message || 'Bilinmeyen hata'));
+                }
+            } catch (error) {
+                console.error('Admin giriş hatası:', error);
+                alert('Giriş yapılırken bir hata oluştu: ' + error.message);
+            }
+        });
+
+        // Profil düzenleme modalını aç
+        function openProfileEditModal() {
+            console.log('Profil düzenleme modalı açılıyor...');
+            
+            // Form resetleme
+            document.getElementById('fileName').textContent = 'Dosya seçilmedi';
+            document.getElementById('imagePreview').style.backgroundImage = '';
+            selectedProfileImage = null;
+            document.getElementById('customContactType').value = '';
+            document.getElementById('customContactValueContainer').style.display = 'none';
+            
+            if (currentProfile) {
+                // Mevcut bilgileri forma doldur
+                document.getElementById('editName').value = currentProfile.name || '';
+                document.getElementById('editTitle').value = currentProfile.title || '';
+                document.getElementById('editBio').value = currentProfile.bio || '';
+                document.getElementById('editEmail').value = currentProfile.email || '';
+                document.getElementById('editPhone').value = currentProfile.phone || '';
+                document.getElementById('editInstagram').value = currentProfile.instagram || '';
+                document.getElementById('editTiktok').value = currentProfile.tiktok || '';
+                document.getElementById('editTwitter').value = currentProfile.twitter || '';
+                document.getElementById('editYoutube').value = currentProfile.youtube || '';
+                document.getElementById('editFacebook').value = currentProfile.facebook || '';
+                document.getElementById('editLinkedin').value = currentProfile.linkedin || '';
+                
+                // Profil resmi önizleme
+                if (currentProfile.image) {
+                    document.getElementById('imagePreview').style.backgroundImage = `url('${currentProfile.image}')`;
+                }
+                
+                // Özel iletişim bilgisini doldur
+                if (currentProfile.custom_contact_type) {
+                    document.getElementById('customContactType').value = currentProfile.custom_contact_type;
+                    document.getElementById('customContactValue').value = currentProfile.custom_contact_value || '';
+                    
+                    // Label'ı güncelle
+                    const labelElement = document.getElementById('customContactLabel');
+                    switch(currentProfile.custom_contact_type) {
+                        case 'whatsapp':
+                            labelElement.textContent = 'WhatsApp Numarası:';
+                            break;
+                        case 'telegram':
+                            labelElement.textContent = 'Telegram Kullanıcı Adı:';
+                            break;
+                        case 'website':
+                            labelElement.textContent = 'Web Sitesi URL:';
+                            break;
+                        case 'address':
+                            labelElement.textContent = 'Adres:';
+                            break;
+                        default:
+                            labelElement.textContent = 'İletişim Bilgisi:';
+                    }
+                    
+                    document.getElementById('customContactValueContainer').style.display = 'block';
+                }
+            }
+            
+            openModal('editProfileModal');
+        }
+
+        // Profili temizleme fonksiyonu
+        async function clearProfile() {
+            if (confirm('Profil bilgilerini tamamen temizlemek istediğinizden emin misiniz?')) {
+                try {
+                    await supabase.from('profile').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                    alert('Profil bilgileri temizlendi!');
+                    await loadProfile();
+                } catch (error) {
+                    alert('Profil temizlenirken hata oluştu: ' + error.message);
+                }
+            }
+        }
+
+        // Profil önizleme fonksiyonu
+        function previewProfile() {
+            if (currentProfile) {
+                alert(`Profil Önizleme:\n\nİsim: ${currentProfile.name || 'Belirtilmemiş'}\nUnvan: ${currentProfile.title || 'Belirtilmemiş'}\nBiyografi: ${currentProfile.bio || 'Belirtilmemiş'}\nE-mail: ${currentProfile.email || 'Belirtilmemiş'}`);
+            } else {
+                alert('Henüz profil bilgisi bulunmuyor.');
+            }
+        }
+
+        // Profil güncelleme işlemi
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            try {
+                let imageUrl = currentProfile ? currentProfile.image : null;
+                
+                // Eğer yeni profil resmi seçildiyse, yükle
+                if (selectedProfileImage) {
+                    imageUrl = await uploadImage(selectedProfileImage, 'profile-images');
+                    
+                    if (!imageUrl) {
+                        alert('Profil resmi yüklenirken hata oluştu!');
+                        return;
+                    }
+                }
+                
+                // Özel iletişim bilgisi
+                const customContactType = document.getElementById('customContactType').value;
+                let customContactValue = '';
+                
+                if (customContactType) {
+                    customContactValue = document.getElementById('customContactValue').value;
+                }
+                
+                const profileData = {
+                    name: document.getElementById('editName').value,
+                    title: document.getElementById('editTitle').value,
+                    bio: document.getElementById('editBio').value,
+                    image: imageUrl,
+                    email: document.getElementById('editEmail').value,
+                    phone: document.getElementById('editPhone').value,
+                    custom_contact_type: customContactType,
+                    custom_contact_value: customContactValue,
+                    instagram: document.getElementById('editInstagram').value,
+                    tiktok: document.getElementById('editTiktok').value,
+                    twitter: document.getElementById('editTwitter').value,
+                    youtube: document.getElementById('editYoutube').value,
+                    facebook: document.getElementById('editFacebook').value,
+                    linkedin: document.getElementById('editLinkedin').value
+                };
+                
+                await updateProfile(profileData);
+                alert('Profil başarıyla güncellendi!');
+                closeModal('editProfileModal');
+                await loadProfile();
+            } catch (error) {
+                alert('Profil güncellenirken bir hata oluştu: ' + error.message);
+            }
+        });
+
+        // Admin çıkış
+        async function logoutAdmin() {
+            try {
+                await logout();
+                location.reload();
+            } catch (error) {
+                console.error('Çıkış yapma hatası:', error);
+                localStorage.removeItem('isAdminLoggedIn');
+                localStorage.removeItem('adminEmail');
+                location.reload();
+            }
+        }
+
+        // Modal işlemleri
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Modal dışına tıklanınca kapanma
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // Yardımcı fonksiyonlar
+        function showSpinner() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('profileSection').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'none';
+        }
+
+        function hideSpinner() {
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+
+        function showEmptyState() {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('profileSection').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

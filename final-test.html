@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Test</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Röportaj Kaydetme Final Test</h1>
+    <button onclick="testComplete()">Tam Test Yap</button>
+    <div id="result"></div>
+
+    <script>
+        const supabaseUrl = 'https://oxqobtlcbksfdajnvnoz.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94cW9idGxjYmtzZmRham52bm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4OTc3MzUsImV4cCI6MjA1MjQ3MzczNX0.06tKXhOw8J4ZEH6Pc3CQMcxbJh4VHoOw8Xf4XS8K1B8';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        async function testComplete() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Test başlatılıyor...<br>';
+            
+            try {
+                // 1. Admin girişi
+                result.innerHTML += '1. Admin girişi yapılıyor...<br>';
+                const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                    email: 'gelmemeyegidenkitapkurdu@gmail.com',
+                    password: 'Elif.6628.Akin'
+                });
+                
+                if (authError) throw authError;
+                result.innerHTML += '✅ Admin girişi başarılı<br>';
+                
+                // 2. Röportaj ekleme
+                result.innerHTML += '2. Röportaj ekleniyor...<br>';
+                const interview = {
+                    title: 'Final Test Röportajı',
+                    description: 'Bu final test röportajıdır',
+                    interviewer_name: 'Test Röportajcı',
+                    guest_name: 'Test Konuk',
+                    cover_image: null
+                };
+                
+                const { data: interviewData, error: interviewError } = await supabase
+                    .from('whatsapp_interviews')
+                    .insert([interview])
+                    .select();
+                
+                if (interviewError) throw interviewError;
+                const interviewId = interviewData[0].id;
+                result.innerHTML += `✅ Röportaj eklendi (ID: ${interviewId})<br>`;
+                
+                // 3. Mesajlar ekleme
+                result.innerHTML += '3. Mesajlar ekleniyor...<br>';
+                
+                const messages = [
+                    {
+                        interview_id: interviewId,
+                        sender_type: 'interviewer',
+                        content: 'Merhaba! Bu röportajımıza hoş geldiniz.',
+                        message_type: 'text',
+                        message_order: 1
+                    },
+                    {
+                        interview_id: interviewId,
+                        sender_type: 'guest',
+                        content: 'Teşekkür ederim! Ben de burada olmaktan mutluyum.',
+                        message_type: 'text',
+                        message_order: 2
+                    },
+                    {
+                        interview_id: interviewId,
+                        sender_type: 'interviewer',
+                        content: 'İlk soruma geçelim. Size nasıl başladığınızı sormak istiyorum.',
+                        message_type: 'text',
+                        message_order: 3
+                    }
+                ];
+                
+                for (let i = 0; i < messages.length; i++) {
+                    const { data: msgData, error: msgError } = await supabase
+                        .from('whatsapp_messages')
+                        .insert([messages[i]])
+                        .select();
+                    
+                    if (msgError) throw msgError;
+                    result.innerHTML += `✅ Mesaj ${i+1} eklendi<br>`;
+                }
+                
+                result.innerHTML += '<br>🎉 <strong>TÜM TESTLER BAŞARILI!</strong><br>';
+                result.innerHTML += `<a href="roportaj.html" target="_blank">Röportaj Sayfasını Görüntüle</a>`;
+                
+            } catch (error) {
+                result.innerHTML += `❌ HATA: ${error.message}<br>`;
+                console.error('Test hatası:', error);
+            }
+        }
+    </script>
+</body>
+</html>

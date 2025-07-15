@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Güncelleme Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Profil güncelleme testi</h1>
+    <div id="result"></div>
+    
+    <script src="supabase-client.js"></script>
+    <script>
+        async function testProfileUpdate() {
+            try {
+                initializeSupabase();
+                
+                console.log('Profil güncelleme testi başlıyor...');
+                
+                // Admin girişi yap
+                const loginResult = await loginAsAdmin('gelmemeyegidenkitapkurdu@gmail.com', 'Elif.6628.Akin');
+                
+                if (!loginResult.success) {
+                    document.getElementById('result').innerHTML = `❌ Admin girişi başarısız: ${loginResult.message}`;
+                    return;
+                }
+                
+                console.log('Admin girişi başarılı');
+                
+                // Test profil verisi
+                const profileData = {
+                    name: 'Elif - Test Güncellemesi',
+                    title: 'Kitap Kurdu & Test Admin',
+                    bio: 'Bu bir test güncellemesidir. Profil güncelleme fonksiyonu test ediliyor.',
+                    email: 'test@gelmemeyegidenkitapkurdu.com',
+                    phone: '+90 555 123 4567',
+                    custom_contact_type: 'whatsapp',
+                    custom_contact_value: '+90 555 123 4567',
+                    instagram: 'https://instagram.com/testuser',
+                    twitter: 'https://twitter.com/testuser'
+                };
+                
+                console.log('Profil güncelleniyor...', profileData);
+                
+                // Güncelleme işlemi
+                const result = await updateProfile(profileData);
+                
+                if (result) {
+                    document.getElementById('result').innerHTML = `
+                        <h2 style="color: green;">✅ BAŞARILI!</h2>
+                        <p><strong>Profil başarıyla güncellendi!</strong></p>
+                        <pre style="background: #f0f0f0; padding: 10px; border-radius: 5px;">${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                    
+                    // Veritabanından son durumu kontrol edelim
+                    setTimeout(async () => {
+                        try {
+                            const checkData = await getProfile();
+                            console.log('Veritabanı kontrolü:', checkData);
+                            
+                            document.getElementById('result').innerHTML += `
+                                <hr>
+                                <h3>Veritabanı Kontrolü:</h3>
+                                <p>İsim: ${checkData.name}</p>
+                                <p>Unvan: ${checkData.title}</p>
+                                <p>Email: ${checkData.email}</p>
+                                <p style="color: green;">✅ Güncelleme veritabanına başarıyla yansıdı!</p>
+                            `;
+                        } catch (error) {
+                            console.error('Veritabanı kontrol hatası:', error);
+                            document.getElementById('result').innerHTML += `
+                                <hr>
+                                <h3 style="color: red;">❌ Veritabanı Kontrol Hatası:</h3>
+                                <p>${error.message}</p>
+                            `;
+                        }
+                    }, 2000);
+                    
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <h2 style="color: red;">❌ HATA!</h2>
+                        <p>Profil güncellenirken hata oluştu</p>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Test hatası:', error);
+                document.getElementById('result').innerHTML = `
+                    <h2 style="color: red;">❌ HATA!</h2>
+                    <p>Test sırasında hata: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // Test'i çalıştır
+        testProfileUpdate();
+    </script>
+</body>
+</html>

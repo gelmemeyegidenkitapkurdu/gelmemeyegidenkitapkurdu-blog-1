@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gelmemeyegiden Kitap Kurdu</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 50%, #e1c9ff 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Ana başlık animasyon */
+        .hero-section {
+            background: url('https://public.youware.com/users-website-assets/prod/706f2595-99eb-435f-b9ad-4ea6b1d680ac/4ae94611e73b4860825125039a6bb61c.jpg') center/cover;
+            height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(147, 51, 234, 0.6);
+        }
+
+        /* Parıltı efektleri için arka plan */
+        .sparkles-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Parıltı parçacıkları - GPU OPTİMİZE */
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+            animation: sparkleFloat 6s infinite ease-in-out;
+            will-change: transform, opacity;
+            transform: translateZ(0);
+        }
+
+        .sparkle:nth-child(2n) {
+            animation-delay: -1s;
+            background: rgba(236, 72, 153, 0.8);
+            box-shadow: 0 0 10px rgba(236, 72, 153, 0.6);
+        }
+
+        .sparkle:nth-child(3n) {
+            animation-delay: -2s;
+            background: rgba(147, 51, 234, 0.8);
+            box-shadow: 0 0 12px rgba(147, 51, 234, 0.6);
+        }
+
+        @keyframes sparkleFloat {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 1;
+            }
+        }
+
+        .animated-title {
+            position: relative;
+            z-index: 2;
+            font-size: 2.8rem;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            animation: fadeInUp 1.5s ease-out, titleShimmer 5s infinite ease-in-out;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 20px rgba(255, 255, 255, 0.3);
+            letter-spacing: 1px;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%);
+            background-size: 200% 100%;
+            will-change: background-position;
+            transform: translateZ(0);
+        }
+
+        /* Başlık parıldama efekti - OPTİMİZE EDİLMİŞ */
+        @keyframes titleShimmer {
+            0% {
+                background-position: -200% 0;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 20px rgba(255, 255, 255, 0.5);
+            }
+            50% {
+                background-position: 200% 0;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 25px rgba(255, 255, 255, 0.7);
+            }
+            100% {
+                background-position: -200% 0;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 20px rgba(255, 255, 255, 0.5);
+            }
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            50% {
+                transform: translateY(-10px);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Üst navigasyon */
+        .top-nav {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(147, 51, 234, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #9333ea;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #9333ea;
+            border: 2px solid #9333ea;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        /* Ana içerik alanı */
+        .main-content {
+            background: white;
+            margin: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.15);
+            overflow: hidden;
+        }
+
+        /* Beyaz şerit navigasyon */
+        .white-strip {
+            background: linear-gradient(90deg, #ffffff 0%, #f8e1ff 50%, #ffffff 100%);
+            padding: 1.5rem 2rem;
+            border-bottom: 3px solid #9333ea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .admin-section {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .admin-info {
+            color: #9333ea;
+            font-weight: bold;
+        }
+
+        .nav-link {
+            color: #9333ea;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(147, 51, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Kategori kartları */
+        .categories {
+            padding: 3rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .category-card {
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 100%);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 2px solid #e1c9ff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(147, 51, 234, 0.2);
+            border-color: #9333ea;
+        }
+
+        .category-icon {
+            font-size: 3rem;
+            color: #9333ea;
+            margin-bottom: 1rem;
+        }
+
+        .category-title {
+            font-size: 1.5rem;
+            color: #9333ea;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .category-desc {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        /* Son Yazılar Bölümü */
+        .latest-posts {
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 100%);
+            padding: 3rem 2rem;
+            margin: 2rem;
+            border-radius: 20px;
+            border: 2px solid #e1c9ff;
+        }
+
+        /* Section header with admin controls */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        /* Admin kontrolleri başlangıçta gizli */
+        .admin-controls {
+            display: none;
+        }
+
+        .admin-controls.show {
+            display: block;
+        }
+
+        .latest-posts h2 {
+            color: #9333ea;
+            font-size: 2rem;
+            margin: 0;
+            position: relative;
+        }
+
+        .latest-posts h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            border-radius: 2px;
+        }
+
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .post-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(147, 51, 234, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.2);
+            border-color: #9333ea;
+        }
+
+        .post-title {
+            color: #9333ea;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .post-excerpt {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-height: 6rem;
+        }
+
+        .post-meta {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        /* Post image */
+        .post-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        /* Admin actions for posts */
+        .post-actions {
+            display: none;
+            margin-top: 1rem;
+            gap: 0.5rem;
+        }
+
+        .post-actions.show {
+            display: flex;
+        }
+
+        .post-actions .admin-btn {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 15px;
+        }
+
+        .no-posts {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 2rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .animated-title {
+                font-size: 2rem;
+                padding: 1rem;
+            }
+            
+            .white-strip {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-links {
+                justify-content: center;
+            }
+            
+            .categories {
+                grid-template-columns: 1fr;
+                padding: 2rem 1rem;
+            }
+        }
+
+        /* Modal stilleri */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #9333ea;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #9333ea;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1c9ff;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #9333ea;
+        }
+
+        /* Veri aktarma modalı */
+        #migrateModal .modal-content {
+            max-width: 600px;
+        }
+        
+        .migrate-status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .migrate-success {
+            background: #d1fae5;
+            color: #047857;
+            border: 1px solid #047857;
+        }
+        
+        .migrate-error {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #b91c1c;
+        }
+        
+        .migrate-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(147, 51, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #9333ea;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Üst Navigasyon -->
+    <nav class="top-nav">
+        <div class="logo">📚 Kitap Kurdu</div>
+        <div class="auth-buttons">
+            <a href="#" class="btn btn-secondary" onclick="openModal('loginModal')">Giriş Yap</a>
+            <a href="#" class="btn btn-secondary" onclick="openModal('registerModal')">Üye Ol</a>
+            <a href="#" class="btn btn-primary" onclick="openModal('adminModal')">Admin Girişi</a>
+        </div>
+    </nav>
+
+    <!-- Hero Bölümü -->
+    <section class="hero-section">
+        <div class="sparkles-background" id="sparklesContainer"></div>
+        <h1 class="animated-title">GELMEMEYEGİDENKİTAPKURDU</h1>
+    </section>
+
+    <!-- Ana İçerik -->
+    <main class="main-content">
+        <!-- Beyaz Şerit Navigasyon -->
+        <div class="white-strip">
+            <div class="nav-links">
+                <a href="yazilar.html" class="nav-link">📝 Yazılar</a>
+                <a href="anketler.html" class="nav-link">📊 Anketler</a>
+                <a href="kitaplar.html" class="nav-link">📖 Kitaplar</a>
+                <a href="#" class="nav-link">🏠 Ana Sayfa</a>
+                <a href="roportaj.html" class="nav-link">🎤 Röportaj</a>
+                <a href="hakkimda.html" class="nav-link">👤 Hakkımda</a>
+            </div>
+            <div class="auth-buttons">
+                <a href="#" class="btn btn-secondary" onclick="openModal('loginModal')">Giriş</a>
+                <a href="#" class="btn btn-secondary" onclick="openModal('registerModal')">Üye Ol</a>
+                <a href="#" class="btn btn-primary" onclick="openModal('adminModal')">Admin</a>
+            </div>
+        </div>
+
+        <!-- Kategoriler -->
+        <section class="categories">
+            <div class="category-card" onclick="location.href='yazilar.html'">
+                <div class="category-icon">📝</div>
+                <h3 class="category-title">Yazılar</h3>
+                <p class="category-desc">Kitap incelemelerim, düşüncelerim ve edebiyat hakkındaki yazılarım. Okuduğum kitaplardan etkilendiklerimi paylaşıyorum.</p>
+            </div>
+            
+            <div class="category-card" onclick="location.href='anketler.html'">
+                <div class="category-icon">📊</div>
+                <h3 class="category-title">Anketler</h3>
+                <p class="category-desc">Okuma alışkanlıkları, favori yazarlar ve kitap tercihleri hakkında anketler. Sizin de görüşlerinizi merak ediyorum!</p>
+            </div>
+            
+            <div class="category-card" onclick="location.href='kitaplar.html'">
+                <div class="category-icon">📖</div>
+                <h3 class="category-title">Kitaplar</h3>
+                <p class="category-desc">Önerdiğim kitaplar ve PDF olarak okuyabileceğiniz eserler. Kaliteli içeriklerle buluşun.</p>
+            </div>
+
+            <div class="category-card" onclick="location.href='roportaj.html'">
+                <div class="category-icon">🎤</div>
+                <h3 class="category-title">Röportaj Köşesi</h3>
+                <p class="category-desc">Yazarlarla yaptığım röportajlar, sohbetler ve edebiyat dünyasından haberler.</p>
+            </div>
+
+            <div class="category-card" onclick="location.href='hakkimda.html'">
+                <div class="category-icon">👤</div>
+                <h3 class="category-title">Hakkımda</h3>
+                <p class="category-desc">Ben kimim, neden bu blogu kurdum ve edebiyat tutkum. Benimle iletişime geçin!</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Son Yazılar Bölümü -->
+    <section class="latest-posts">
+        <div class="section-header">
+            <h2>📚 Son Yazılar</h2>
+            <div class="admin-controls" id="postsAdminControls">
+                <button class="btn btn-primary" onclick="openModal('addPostModal')">
+                    ➕ Yeni Yazı Ekle
+                </button>
+            </div>
+        </div>
+        
+        <div id="postsLoadingSpinner" class="spinner"></div>
+        <div class="posts-grid" id="postsGrid">
+            <!-- Yazılar dinamik olarak yüklenecek -->
+        </div>
+        
+        <div class="empty-state" id="postsEmptyState" style="display: none;">
+            <h3>Henüz yazı bulunmuyor</h3>
+            <p>İlk yazıyı eklemek için admin girişi yapın.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Gelmemeyegiden Kitap Kurdu. Tüm hakları saklıdır.</p>
+        <p>📧 gelmemeyegidenkitapkurdu@gmail.com</p>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2 style="color: #9333ea; margin-bottom: 1.5rem;">Giriş Yap</h2>
+            <form>
+                <div class="form-group">
+                    <label>E-mail:</label>
+                    <input type="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Şifre:</label>
+                    <input type="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Giriş Yap</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2 style="color: #9333ea; margin-bottom: 1.5rem;">Üye Ol</h2>
+            <form>
+                <div class="form-group">
+                    <label>E-mail:</label>
+                    <input type="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Şifre:</label>
+                    <input type="password" required>
+                </div>
+                <div class="form-group">
+                    <label>Şifre Tekrar:</label>
+                    <input type="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Üye Ol</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('adminModal')">&times;</span>
+            <h2 style="color: #9333ea; margin-bottom: 1.5rem;">Admin Girişi</h2>
+            
+            <!-- Adım 1: Email ve Şifre -->
+            <div id="adminStep1" style="display: block;">
+                <form id="adminForm">
+                    <div class="form-group">
+                        <label>Admin E-mail:</label>
+                        <input type="email" id="adminEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Admin Şifre:</label>
+                        <input type="password" id="adminPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Devam Et</button>
+                </form>
+            </div>
+
+            <!-- Adım 2: Email Doğrulama Kodu -->
+            <div id="adminStep2" style="display: none;">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="color: #9333ea; font-size: 3rem; margin-bottom: 1rem;">🔐</div>
+                    <h3 style="color: #9333ea; margin-bottom: 0.5rem;">Güvenlik Doğrulaması</h3>
+                    <p style="color: #666; margin-bottom: 1rem;">E-mail adresinize 6 haneli doğrulama kodu gönderildi.</p>
+                </div>
+                <form id="verificationForm">
+                    <div class="form-group">
+                        <label>Doğrulama Kodu:</label>
+                        <input type="text" id="verificationCode" maxlength="6" placeholder="6 haneli kod" required 
+                               style="text-align: center; font-size: 1.5rem; letter-spacing: 0.3rem;">
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button type="button" onclick="goBackToStep1()" class="btn btn-secondary" style="flex: 1;">
+                            ← Geri
+                        </button>
+                        <button type="submit" class="btn btn-primary" style="flex: 2;">
+                            Doğrula ve Giriş Yap
+                        </button>
+                    </div>
+                    <button type="button" onclick="resendVerificationCode()" class="btn" 
+                            style="width: 100%; margin-top: 1rem; background: transparent; color: #9333ea; border: 1px solid #9333ea;">
+                        Kodu Tekrar Gönder
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yazı Ekleme/Düzenleme Modalı -->
+    <div id="addPostModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addPostModal')">&times;</span>
+            <h2 id="postModalTitle" style="color: #9333ea; margin-bottom: 1.5rem;">Yeni Yazı Ekle</h2>
+            <form id="postForm">
+                <div class="form-group">
+                    <label>Yazı Başlığı:</label>
+                    <input type="text" id="postTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Yazar:</label>
+                    <input type="text" id="postAuthor" required>
+                </div>
+                <div class="form-group">
+                    <label>Yazı Resmi (İsteğe bağlı):</label>
+                    <div class="file-input-container">
+                        <div class="image-preview" id="postImagePreview"></div>
+                        <label for="postImage" class="file-input-label">📷 Resim Seç</label>
+                        <input type="file" id="postImage" class="file-input" accept="image/*">
+                        <div class="file-name" id="postImageFileName">Dosya seçilmedi</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>İçerik:</label>
+                    <textarea id="postContent" required style="min-height: 200px;" placeholder="Yazı içeriğini buraya yazın..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="postSubmitBtn">Yazı Ekle</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Yazı Detay Modalı -->
+    <div id="postDetailModal" class="modal">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <span class="close" onclick="closeModal('postDetailModal')">&times;</span>
+            <div id="postDetailContent">
+                <!-- İçerik dinamik olarak yüklenecek -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Veri Aktarma Modalı (localStorage -> Supabase) -->
+    <div id="migrateModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('migrateModal')">&times;</span>
+            <h2 style="color: #9333ea; margin-bottom: 1.5rem;">Verileri Aktarma</h2>
+            <p style="margin-bottom: 1.5rem;">
+                LocalStorage'daki mevcut verilerinizi kalıcı veritabanına (Supabase) aktarmak için lütfen aşağıdaki butona tıklayın.
+                Bu işlem sayesinde verileriniz kaybolmayacak ve farklı cihazlardan erişilebilir olacak.
+            </p>
+            <button id="migrateButton" class="btn btn-primary" style="width: 100%;">Verileri Aktar</button>
+            
+            <div id="migrateStatus" class="migrate-status">
+                <div id="migrateSpinner" class="migrate-spinner"></div>
+                <span id="migrateMessage">Veriler aktarılıyor...</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="data-persistence.js"></script>
+    <script src="supabase-client.js"></script>
+    <script>
+        // Sayfanın başlangıcında Supabase'i başlat
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                initializeSupabase();
+                
+                // Admin durumunu kontrol et
+                const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+                if (isAdminLoggedIn) {
+                    updateUIForAdmin();
+                    
+                    // Admin girişi yapılmışsa veri aktarma modalını gösterme seçeneği ekle
+                    const authButtons = document.querySelectorAll('.auth-buttons');
+                    authButtons.forEach(container => {
+                        // Mevcut içeriği koruyarak sadece yeni buton ekle
+                        const migrateButton = document.createElement('a');
+                        migrateButton.href = "#";
+                        migrateButton.className = "btn btn-secondary";
+                        migrateButton.textContent = "Verileri Aktar";
+                        migrateButton.onclick = function() { openModal('migrateModal'); };
+                        
+                        // İlk butonu koru, ikinci butonu değiştir ve yeni buton ekle
+                        const existingButtons = container.querySelectorAll('a');
+                        if (existingButtons.length >= 2) {
+                            container.insertBefore(migrateButton, existingButtons[1]);
+                        } else {
+                            container.appendChild(migrateButton);
+                        }
+                    });
+                }
+                
+                // Veri aktarma işlemi
+                document.getElementById('migrateButton').addEventListener('click', async function() {
+                    const statusElem = document.getElementById('migrateStatus');
+                    const spinnerElem = document.getElementById('migrateSpinner');
+                    const messageElem = document.getElementById('migrateMessage');
+                    
+                    // İşlem başladı
+                    statusElem.style.display = 'block';
+                    statusElem.className = 'migrate-status';
+                    spinnerElem.style.display = 'inline-block';
+                    messageElem.textContent = 'Veriler aktarılıyor...';
+                    
+                    try {
+                        // Tüm verileri aktar
+                        const result = await migrateAllDataFromLocalStorage();
+                        
+                        // İşlem başarılı
+                        spinnerElem.style.display = 'none';
+                        statusElem.className = 'migrate-status migrate-success';
+                        
+                        if (result.success) {
+                            messageElem.textContent = 'Veriler başarıyla aktarıldı! Artık verileriniz kalıcı olarak saklanıyor.';
+                            
+                            // Detaylı sonuçları göster
+                            let detailsHtml = '<ul style="margin-top: 10px;">';
+                            if (result.details.blogPosts.success) {
+                                detailsHtml += `<li>Yazılar: ${result.details.blogPosts.message}</li>`;
+                            }
+                            if (result.details.polls.success) {
+                                detailsHtml += `<li>Anketler: ${result.details.polls.message}</li>`;
+                            }
+                            if (result.details.books.success) {
+                                detailsHtml += `<li>Kitaplar: ${result.details.books.message}</li>`;
+                            }
+                            if (result.details.interviews.success) {
+                                detailsHtml += `<li>Röportajlar: ${result.details.interviews.message}</li>`;
+                            }
+                            if (result.details.profile.success) {
+                                detailsHtml += `<li>Profil: ${result.details.profile.message}</li>`;
+                            }
+                            detailsHtml += '</ul>';
+                            
+                            messageElem.innerHTML = messageElem.textContent + detailsHtml;
+                        } else {
+                            messageElem.textContent = 'Veri aktarımı sırasında bazı sorunlar oluştu. Lütfen tekrar deneyin.';
+                        }
+                    } catch (error) {
+                        // İşlem başarısız
+                        spinnerElem.style.display = 'none';
+                        statusElem.className = 'migrate-status migrate-error';
+                        messageElem.textContent = 'Veri aktarımı sırasında bir hata oluştu: ' + error.message;
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Supabase başlatma hatası:', error);
+            }
+        });
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Modal dışına tıklanınca kapanma
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // Sayfa yüklendiğinde animasyon
+        window.addEventListener('load', function() {
+            const title = document.querySelector('.animated-title');
+            title.style.animation = 'fadeInUp 2.5s ease-out, titleShimmer 3s infinite ease-in-out';
+            
+            // Parıltı efektlerini başlat
+            createSparkles();
+            
+            // Admin durumunu kontrol et ve son yazıları yükle
+            checkAdminStatusForPosts();
+            loadLatestPosts();
+        });
+
+        // Parıltı efektleri oluştur - ULTRA OPTİMİZE
+        function createSparkles() {
+            const container = document.getElementById('sparklesContainer');
+            if (!container) return;
+            
+            // Sadece 5 adet parıltı parçacığı oluştur
+            for (let i = 0; i < 5; i++) {
+                createSparkle(container);
+            }
+            
+            // Her 5 saniyede yeni parıltı ekle (çok az sık)
+            setInterval(() => {
+                if (container.children.length < 8) { // Maksimum 8 parıltı
+                    createSparkle(container);
+                }
+            }, 5000);
+        }
+
+        function createSparkle(container) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            
+            // Rastgele pozisyon
+            const x = Math.random() * 100;
+            const y = Math.random() * 100;
+            
+            sparkle.style.left = x + '%';
+            sparkle.style.top = y + '%';
+            
+            // Sabit animasyon özellikleri (performans için)
+            sparkle.style.animationDelay = Math.random() * 2 + 's';
+            sparkle.style.animationDuration = '6s';
+            
+            container.appendChild(sparkle);
+            
+            // Daha kısa süre sonra kaldır
+            setTimeout(() => {
+                if (sparkle.parentNode) {
+                    sparkle.parentNode.removeChild(sparkle);
+                }
+            }, 6000);
+        }
+
+        // Admin durumunu kontrol et (Son Yazılar için)
+        async function checkAdminStatusForPosts() {
+            const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+            
+            if (isAdminLoggedIn) {
+                try {
+                    const session = await checkSession();
+                    if (!session.isLoggedIn) {
+                        // Session yoksa admin girişi yap
+                        console.log('Admin auth token bulunamadı, giriş yapılıyor...');
+                        await loginAsAdmin('gelmemeyegidenkitapkurdu@gmail.com', 'Elif.6628.Akin');
+                    }
+                    
+                    // Admin kontrollerini göster
+                    document.getElementById('postsAdminControls').classList.add('show');
+                    
+                    // Post kartlarındaki admin butonlarını göster
+                    document.querySelectorAll('.post-actions').forEach(actions => {
+                        actions.classList.add('show');
+                    });
+                } catch (authError) {
+                    console.error('Admin doğrulama hatası:', authError);
+                    // Fallback olarak kontrolleri göster
+                    document.getElementById('postsAdminControls').classList.add('show');
+                }
+            }
+        }
+
+        // Son yazıları yükle
+        async function loadLatestPosts() {
+            try {
+                showPostsSpinner();
+                const posts = await getBlogPosts();
+                
+                // En son 3 yazıyı göster
+                const latestPosts = posts.slice(0, 3);
+                displayLatestPosts(latestPosts);
+                hidePostsSpinner();
+            } catch (error) {
+                console.error('Son yazıları yükleme hatası:', error);
+                hidePostsSpinner();
+                showPostsEmptyState();
+            }
+        }
+
+        // Son yazıları göster
+        function displayLatestPosts(posts) {
+            const postsGrid = document.getElementById('postsGrid');
+            const emptyState = document.getElementById('postsEmptyState');
+            
+            if (!posts || posts.length === 0) {
+                showPostsEmptyState();
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            postsGrid.innerHTML = '';
+            
+            const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+            
+            posts.forEach(post => {
+                const postCard = createPostCard(post, isAdminLoggedIn);
+                postsGrid.appendChild(postCard);
+            });
+        }
+
+        // Yazı kartı oluştur
+        function createPostCard(post, isAdminLoggedIn) {
+            const card = document.createElement('div');
+            card.className = 'post-card';
+            
+            // Yazı resmi HTML'i
+            let imageHtml = '';
+            if (post.image_url) {
+                imageHtml = `<img src="${post.image_url}" alt="${post.title}" class="post-image">`;
+            }
+            
+            // İçeriği kısalt (200 karakter, daha uzun özet)
+            const excerpt = post.content.length > 200 ? 
+                post.content.substring(0, 200) + '...' : post.content;
+            
+            card.innerHTML = `
+                ${imageHtml}
+                <h3 class="post-title">${post.title}</h3>
+                <p class="post-excerpt">${excerpt}</p>
+                <div class="post-meta">
+                    <span>👤 ${post.author}</span>
+                </div>
+                <div class="post-actions ${isAdminLoggedIn ? 'show' : ''}">
+                    <button class="admin-btn edit-btn" onclick="editPost('${post.id}')">Düzenle</button>
+                    <button class="admin-btn delete-btn" onclick="deletePost('${post.id}')">Sil</button>
+                </div>
+            `;
+            
+            // Yazıya tıklayınca detay modal'ını aç
+            card.addEventListener('click', function(e) {
+                if (!e.target.classList.contains('admin-btn')) {
+                    openPostDetailModal(post);
+                }
+            });
+            
+            return card;
+        }
+
+        // Yazı detay modal'ını aç
+        function openPostDetailModal(post) {
+            const modal = document.getElementById('postDetailModal');
+            const content = document.getElementById('postDetailContent');
+            
+            let imageHtml = '';
+            if (post.image_url) {
+                imageHtml = `<img src="${post.image_url}" alt="${post.title}" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 10px; margin-bottom: 1.5rem;">`;
+            }
+            
+            // Tarih formatı
+            const date = new Date(post.created_at);
+            const formattedDate = date.toLocaleDateString('tr-TR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            content.innerHTML = `
+                ${imageHtml}
+                <h1 style="color: #9333ea; margin-bottom: 1rem; font-size: 2rem;">${post.title}</h1>
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem; color: #666; border-bottom: 1px solid #e1c9ff; padding-bottom: 1rem;">
+                    <span>👤 ${post.author}</span>
+                    <span>📅 ${formattedDate}</span>
+                </div>
+                <div style="line-height: 1.8; color: #333; font-size: 1.1rem; white-space: pre-wrap;">${post.content}</div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        // Yardımcı fonksiyonlar
+        function showPostsSpinner() {
+            document.getElementById('postsLoadingSpinner').style.display = 'block';
+            document.getElementById('postsGrid').style.display = 'none';
+            document.getElementById('postsEmptyState').style.display = 'none';
+        }
+
+        function hidePostsSpinner() {
+            document.getElementById('postsLoadingSpinner').style.display = 'none';
+            document.getElementById('postsGrid').style.display = 'grid';
+        }
+
+        function showPostsEmptyState() {
+            document.getElementById('postsLoadingSpinner').style.display = 'none';
+            document.getElementById('postsGrid').style.display = 'none';
+            document.getElementById('postsEmptyState').style.display = 'block';
+        }
+
+        // Global değişkenler
+        let currentEditingPostId = null;
+        let selectedPostImage = null;
+
+        // Global değişkenler
+        let adminEmailForVerification = '';
+        let adminPasswordForVerification = '';
+
+        // Admin giriş adım 1 - Email ve şifre kontrolü
+        document.getElementById('adminForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            try {
+                // Önce şifre kontrolü yap
+                const loginResult = await loginAsAdmin(email, password);
+                
+                if (loginResult.success) {
+                    // Şifre doğru, şimdi email kodu gönder
+                    adminEmailForVerification = email;
+                    adminPasswordForVerification = password;
+                    
+                    showLoadingIndicator('Email doğrulama kodu gönderiliyor...');
+                    
+                    const codeResult = await sendAdminVerificationCode(email);
+                    
+                    hideLoadingIndicator();
+                    
+                    if (codeResult.success) {
+                        // Test modunda kodu göster
+                        if (codeResult.test_code) {
+                            alert('⚠️ TEST MODU: Kod = ' + codeResult.test_code + '\n\n' + codeResult.message);
+                        } else {
+                            alert(codeResult.message);
+                        }
+                        
+                        // Adım 2'ye geç
+                        document.getElementById('adminStep1').style.display = 'none';
+                        document.getElementById('adminStep2').style.display = 'block';
+                        
+                        // Kod alanına odaklan
+                        setTimeout(() => {
+                            document.getElementById('verificationCode').focus();
+                        }, 100);
+                    } else {
+                        alert('Doğrulama kodu gönderilemedi: ' + codeResult.error);
+                    }
+                } else {
+                    alert('Hatalı admin bilgileri!');
+                }
+            } catch (error) {
+                hideLoadingIndicator();
+                alert('Giriş yapılırken bir hata oluştu: ' + error.message);
+            }
+        });
+
+        // Admin giriş adım 2 - Kod doğrulama
+        document.getElementById('verificationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const code = document.getElementById('verificationCode').value;
+            
+            if (code.length !== 6) {
+                alert('Lütfen 6 haneli kodu giriniz!');
+                return;
+            }
+            
+            try {
+                showLoadingIndicator('Kod doğrulanıyor...');
+                
+                const verifyResult = await verifyAdminCode(adminEmailForVerification, code);
+                
+                hideLoadingIndicator();
+                
+                if (verifyResult.success) {
+                    alert('✅ Güvenlik doğrulaması başarılı! Admin paneline yönlendiriliyorsunuz...');
+                    closeModal('adminModal');
+                    location.reload(); // Sayfayı yenile
+                } else {
+                    alert('❌ ' + verifyResult.error);
+                    // Kod alanını temizle
+                    document.getElementById('verificationCode').value = '';
+                    document.getElementById('verificationCode').focus();
+                }
+            } catch (error) {
+                hideLoadingIndicator();
+                alert('Kod doğrulanırken bir hata oluştu: ' + error.message);
+            }
+        });
+
+        // Yardımcı fonksiyonlar
+        function goBackToStep1() {
+            document.getElementById('adminStep2').style.display = 'none';
+            document.getElementById('adminStep1').style.display = 'block';
+        }
+
+        async function resendVerificationCode() {
+            try {
+                showLoadingIndicator('Kod tekrar gönderiliyor...');
+                
+                const codeResult = await sendAdminVerificationCode(adminEmailForVerification);
+                
+                hideLoadingIndicator();
+                
+                if (codeResult.success) {
+                    // Test modunda kodu göster
+                    if (codeResult.test_code) {
+                        alert('⚠️ TEST MODU: Yeni Kod = ' + codeResult.test_code + '\n\n🔄 ' + codeResult.message);
+                    } else {
+                        alert('🔄 ' + codeResult.message);
+                    }
+                    
+                    document.getElementById('verificationCode').value = '';
+                    document.getElementById('verificationCode').focus();
+                } else {
+                    alert('❌ Kod tekrar gönderilemedi: ' + codeResult.error);
+                }
+            } catch (error) {
+                hideLoadingIndicator();
+                alert('Kod gönderilirken bir hata oluştu: ' + error.message);
+            }
+        }
+
+        // Yazı form işlemleri
+        document.addEventListener('DOMContentLoaded', function() {
+            // Resim önizleme için event listener
+            document.getElementById('postImage').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    selectedPostImage = file;
+                    document.getElementById('postImageFileName').textContent = file.name;
+                    
+                    // Resim önizleme
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('postImagePreview').style.backgroundImage = `url('${e.target.result}')`;
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Yazı form submit
+            document.getElementById('postForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const title = document.getElementById('postTitle').value;
+                const author = document.getElementById('postAuthor').value;
+                const content = document.getElementById('postContent').value;
+                
+                try {
+                    let imageUrl = null;
+                    
+                    // Eğer yeni resim seçildiyse, yükle
+                    if (selectedPostImage) {
+                        imageUrl = await uploadImage(selectedPostImage, 'blog-images');
+                        
+                        if (!imageUrl) {
+                            alert('Resim yüklenirken hata oluştu!');
+                            return;
+                        }
+                    }
+                    
+                    const postData = {
+                        title,
+                        author,
+                        content,
+                        image_url: imageUrl
+                    };
+                    
+                    if (currentEditingPostId) {
+                        // Düzenleme modunda mevcut resmi koru (eğer yeni resim yüklenmemişse)
+                        // Bu kısım şimdilik basit tutuluyor
+                        await updateBlogPost(currentEditingPostId, postData);
+                        alert('Yazı başarıyla güncellendi!');
+                    } else {
+                        // Yeni ekleme
+                        await addBlogPost(postData);
+                        alert('Yazı başarıyla eklendi!');
+                    }
+                    
+                    closeModal('addPostModal');
+                    resetPostForm();
+                    await loadLatestPosts();
+                } catch (error) {
+                    alert('İşlem sırasında bir hata oluştu: ' + error.message);
+                }
+            });
+        });
+
+        // Yazı form sıfırlama
+        function resetPostForm() {
+            currentEditingPostId = null;
+            selectedPostImage = null;
+            document.getElementById('postModalTitle').textContent = 'Yeni Yazı Ekle';
+            document.getElementById('postSubmitBtn').textContent = 'Yazı Ekle';
+            document.getElementById('postForm').reset();
+            
+            // Resim önizlemeyi temizle
+            document.getElementById('postImagePreview').style.backgroundImage = '';
+            document.getElementById('postImageFileName').textContent = 'Dosya seçilmedi';
+        }
+
+        // Yazı düzenleme (placeholder)
+        function editPost(id) {
+            // Bu fonksiyon yazılar.html sayfasındaki düzenleme ile entegre edilebilir
+            window.location.href = `yazilar.html#edit-${id}`;
+        }
+
+        // Yazı silme (placeholder) 
+        async function deletePost(id) {
+            if (!confirm('Bu yazıyı silmek istediğinizden emin misiniz?')) return;
+            
+            try {
+                await deleteBlogPost(id);
+                alert('Yazı başarıyla silindi!');
+                await loadLatestPosts();
+            } catch (error) {
+                alert('Yazı silinirken bir hata oluştu: ' + error.message);
+            }
+        }
+
+        function updateUIForAdmin() {
+            const authButtons = document.querySelectorAll('.auth-buttons');
+            authButtons.forEach(container => {
+                container.innerHTML = `
+                    <a href="admin-panel.html" class="btn btn-primary">🔧 Admin Panel</a>
+                    <a href="#" class="btn btn-secondary" onclick="logoutAdmin()">Çıkış Yap</a>
+                `;
+            });
+        }
+
+        async function logoutAdmin() {
+            try {
+                // Supabase ile çıkış yap
+                await logout();
+                location.reload();
+            } catch (error) {
+                console.error('Çıkış yapma hatası:', error);
+                // Hata olsa bile localStorage'ı temizle
+                localStorage.removeItem('isAdminLoggedIn');
+                localStorage.removeItem('adminEmail');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitaplar - Gelmemeyegiden Kitap Kurdu</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 50%, #e1c9ff 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(147, 51, 234, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #9333ea;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .admin-login-btn {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-left: 1rem;
+        }
+
+        .admin-login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        .nav-link {
+            color: #9333ea;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(147, 51, 234, 0.1);
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-title {
+            color: #9333ea;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 4px;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            border-radius: 2px;
+        }
+
+        .admin-notice {
+            background: #f0f7ff;
+            color: #1e40af;
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            border: 2px solid #3b82f6;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .book-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(147, 51, 234, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.2);
+            border-color: #9333ea;
+        }
+
+        .book-cover {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            border: 2px solid #e1c9ff;
+        }
+
+        .book-title {
+            color: #9333ea;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .book-author {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .book-description {
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .book-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-read {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-read:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+        }
+
+        .btn-edit {
+            background: #f59e0b;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-delete {
+            background: #dc2626;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .no-books {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 3rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(147, 51, 234, 0.1);
+        }
+
+        /* Modal stilleri */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #9333ea;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #9333ea;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1c9ff;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #9333ea;
+        }
+
+        .file-upload-section {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 2px dashed #e1c9ff;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .upload-option {
+            margin-bottom: 1rem;
+        }
+
+        .upload-option input[type="radio"] {
+            margin-right: 0.5rem;
+        }
+
+        .upload-preview {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #e8f5e8;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .upload-progress {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e1c9ff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .books-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <a href="index.html" class="logo">📚 Kitap Kurdu</a>
+        <div style="display: flex; align-items: center;">
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link">🏠 Ana Sayfa</a>
+                <a href="yazilar.html" class="nav-link">📝 Yazılar</a>
+                <a href="anketler.html" class="nav-link">📊 Anketler</a>
+                <a href="kitaplar.html" class="nav-link">📖 Kitaplar</a>
+                <a href="roportaj.html" class="nav-link">🎤 Röportaj</a>
+                <a href="hakkimda.html" class="nav-link">👤 Hakkımda</a>
+            </nav>
+            <a href="index.html" class="admin-login-btn" id="adminLink">🔧 Admin Girişi</a>
+        </div>
+    </header>
+
+    <!-- Ana İçerik -->
+    <main class="main-content">
+        <h1 class="page-title">📖 Kitaplar</h1>
+        
+        <!-- Admin Bildirimi - Admin değilse göster -->
+        <div class="admin-notice" id="adminNotice">
+            <h3>🔒 Sadece Admin Erişimi</h3>
+            <p>Kitap ekleme ve düzenleme sadece admin girişi yapıldıktan sonra kullanılabilir. Kitapları görüntüleyebilir ancak düzenleyemezsiniz.</p>
+        </div>
+        
+        <div id="adminControlsContainer">
+            <!-- Admin kontrolleri buraya dinamik olarak JavaScript ile eklenecek -->
+        </div>
+
+        <!-- Kitaplar Listesi -->
+        <div class="books-grid" id="booksGrid">
+            <div class="no-books" id="noBooksMessage">
+                Henüz kitap eklenmemiş. Admin girişi yaparak kitap ekleyebilirsiniz.
+            </div>
+        </div>
+    </main>
+
+    <!-- Kitap Ekleme/Düzenleme Modal -->
+    <div id="bookModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBookModal()">&times;</span>
+            <h2 id="bookModalTitle">Kitap Ekle</h2>
+            <form id="bookForm">
+                <div class="form-group">
+                    <label>Kitap Başlığı:</label>
+                    <input type="text" id="bookTitle" required placeholder="Kitap başlığını yazın">
+                </div>
+                
+                <div class="form-group">
+                    <label>Yazar:</label>
+                    <input type="text" id="bookAuthor" required placeholder="Yazar adını yazın">
+                </div>
+                
+                <div class="form-group">
+                    <label>Açıklama:</label>
+                    <textarea id="bookDescription" placeholder="Kitap hakkında kısa açıklama yazın"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Kapak Resmi:</label>
+                    <input type="file" id="bookCoverFile" accept="image/*" onchange="handleImageUpload(this, 'coverPreview')">
+                    <div id="coverPreview" style="margin-top: 1rem;"></div>
+                    <input type="hidden" id="bookCover">
+                </div>
+                
+                <div class="form-group">
+                    <label>PDF Dosyası:</label>
+                    <div class="file-upload-section">
+                        <div class="upload-option">
+                            <input type="radio" id="uploadFile" name="pdfOption" value="file" checked>
+                            <label for="uploadFile">PDF Dosya Yükle</label>
+                        </div>
+                        <div class="upload-option">
+                            <input type="radio" id="uploadLink" name="pdfOption" value="link">
+                            <label for="uploadLink">Bağlantı Olarak Ekle</label>
+                        </div>
+                        
+                        <div id="fileUploadSection">
+                            <input type="file" id="bookPdfFile" accept=".pdf" onchange="handlePdfUpload(this)">
+                            <div id="pdfPreview" class="upload-preview"></div>
+                            <div id="uploadProgress" class="upload-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill"></div>
+                                </div>
+                                <p id="progressText">Yükleniyor...</p>
+                            </div>
+                        </div>
+                        
+                        <div id="linkUploadSection" style="display: none;">
+                            <input type="url" id="bookPdfLink" placeholder="PDF bağlantısını yazın (https://...)">
+                        </div>
+                    </div>
+                    <input type="hidden" id="bookFile">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Kaydet</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="data-persistence.js"></script>
+    <script src="supabase-client.js"></script>
+    <script>
+        let books = [];
+        let editingBookId = null;
+        let isAdmin = false;
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSupabase();
+            checkAdminStatus();
+            loadBooks();
+            updateAdminButton();
+            
+            // PDF seçenek değişikliklerini dinle
+            document.querySelectorAll('input[name="pdfOption"]').forEach(radio => {
+                radio.addEventListener('change', togglePdfUploadOption);
+            });
+        });
+
+        // Admin butonunu güncelle
+        function updateAdminButton() {
+            const adminLink = document.getElementById('adminLink');
+            const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+            
+            if (isAdminLoggedIn) {
+                adminLink.textContent = '🔧 Admin Panel';
+                adminLink.href = 'admin-panel.html';
+            } else {
+                adminLink.textContent = '🔧 Admin Girişi';
+                adminLink.href = 'index.html';
+            }
+        }
+
+        // Admin durumu kontrol et - GÜVENLİK KONTROLÜ - DİNAMİK SİSTEM
+        function checkAdminStatus() {
+            const adminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+            const adminEmail = localStorage.getItem('adminEmail');
+            
+            // Çift kontrol: hem giriş durumu hem de doğru email
+            isAdmin = adminLoggedIn && adminEmail === 'gelmemeyegidenkitapkurdu@gmail.com';
+            
+            const adminControlsContainer = document.getElementById('adminControlsContainer');
+            adminControlsContainer.innerHTML = '';
+            
+            if (isAdmin) {
+                // Admin ise kontrolleri dinamik olarak oluştur ve ekle
+                document.getElementById('adminNotice').style.display = 'none';
+                
+                const adminControls = document.createElement('div');
+                adminControls.className = 'admin-controls';
+                adminControls.style.background = 'linear-gradient(135deg, #9333ea, #ec4899)';
+                adminControls.style.color = 'white';
+                adminControls.style.padding = '1rem 2rem';
+                adminControls.style.borderRadius = '15px';
+                adminControls.style.marginBottom = '2rem';
+                adminControls.style.display = 'block';
+                adminControls.innerHTML = `
+                    <h3>Admin Kontrolleri</h3>
+                    <button class="btn btn-primary" onclick="openBookModal()">📖 Yeni Kitap Ekle</button>
+                `;
+                
+                adminControlsContainer.appendChild(adminControls);
+            } else {
+                // Admin değilse bildirimi göster
+                document.getElementById('adminNotice').style.display = 'block';
+            }
+            
+            console.log('Admin durumu:', isAdmin);
+        }
+
+        // Kitapları yükle
+        async function loadBooks() {
+            try {
+                // Supabase'den kitapları getir
+                books = await getBooks();
+                displayBooks();
+            } catch (error) {
+                console.error('Kitaplar yüklenirken hata:', error);
+                // Hata durumunda localStorage'dan yüklemeyi dene
+                books = JSON.parse(localStorage.getItem('blogBooks') || '[]');
+                displayBooks();
+            }
+        }
+
+        // Kitapları göster
+        function displayBooks() {
+            const grid = document.getElementById('booksGrid');
+            const noMessage = document.getElementById('noBooksMessage');
+            
+            if (books.length === 0) {
+                noMessage.style.display = 'block';
+                return;
+            }
+            
+            noMessage.style.display = 'none';
+            
+            const booksHTML = books.map(book => `
+                <div class="book-card">
+                    ${book.cover_image_url || book.cover ? 
+                        `<img src="${book.cover_image_url || book.cover}" alt="Kapak" class="book-cover" onerror="this.style.display='none'">` : 
+                        '<div class="book-cover" style="background: linear-gradient(135deg, #f8e1ff, #e1c9ff); display: flex; align-items: center; justify-content: center; color: #9333ea; font-size: 2rem;">📖</div>'
+                    }
+                    <h3 class="book-title">${book.title}</h3>
+                    <p class="book-author">Yazar: ${book.author}</p>
+                    ${book.description ? `<p class="book-description">${book.description}</p>` : ''}
+                    <div class="book-actions">
+                        ${book.file_url || book.file ? 
+                            `<a href="${book.file_url || book.file}" target="_blank" class="btn-read">📖 Oku</a>` : 
+                            '<span style="color: #999; font-style: italic;">PDF henüz eklenmemiş</span>'
+                        }
+                        ${isAdmin ? `
+                            <button class="btn-edit" onclick="editBook('${book.id || book.title}')">✏️ Düzenle</button>
+                            <button class="btn-delete" onclick="deleteBook('${book.id || book.title}')">🗑️ Sil</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+            
+            grid.innerHTML = booksHTML;
+        }
+
+        // PDF yükleme seçeneğini değiştir
+        function togglePdfUploadOption() {
+            const fileSection = document.getElementById('fileUploadSection');
+            const linkSection = document.getElementById('linkUploadSection');
+            const selectedOption = document.querySelector('input[name="pdfOption"]:checked').value;
+            
+            if (selectedOption === 'file') {
+                fileSection.style.display = 'block';
+                linkSection.style.display = 'none';
+            } else {
+                fileSection.style.display = 'none';
+                linkSection.style.display = 'block';
+            }
+        }
+
+        // Kitap modal aç
+        function openBookModal(bookData = null) {
+            if (!isAdmin) {
+                alert('❌ Bu özellik sadece admin girişi yapıldıktan sonra kullanılabilir!');
+                return;
+            }
+            
+            const modal = document.getElementById('bookModal');
+            const title = document.getElementById('bookModalTitle');
+            
+            if (bookData) {
+                title.textContent = 'Kitap Düzenle';
+                editingBookId = bookData.id || bookData.title;
+                
+                // Form verilerini doldur
+                document.getElementById('bookTitle').value = bookData.title || '';
+                document.getElementById('bookAuthor').value = bookData.author || '';
+                document.getElementById('bookDescription').value = bookData.description || '';
+                document.getElementById('bookCover').value = bookData.cover_image_url || bookData.cover || '';
+                document.getElementById('bookFile').value = bookData.file_url || bookData.file || '';
+                
+                // Kapak önizlemesini göster
+                if (bookData.cover_image_url || bookData.cover) {
+                    document.getElementById('coverPreview').innerHTML = `
+                        <img src="${bookData.cover_image_url || bookData.cover}" style="max-width: 200px; max-height: 200px; border-radius: 10px; object-fit: cover; border: 2px solid #9333ea;">
+                        <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">Mevcut kapak resmi</p>
+                    `;
+                }
+                
+                // PDF önizlemesini göster
+                if (bookData.file_url || bookData.file) {
+                    document.getElementById('pdfPreview').style.display = 'block';
+                    document.getElementById('pdfPreview').innerHTML = `
+                        <p style="color: #047857; font-weight: 600;">✅ PDF dosyası mevcut</p>
+                        <a href="${bookData.file_url || bookData.file}" target="_blank" style="color: #9333ea;">PDF'i görüntüle</a>
+                    `;
+                }
+            } else {
+                title.textContent = 'Kitap Ekle';
+                editingBookId = null;
+                document.getElementById('bookForm').reset();
+                document.getElementById('coverPreview').innerHTML = '';
+                document.getElementById('pdfPreview').style.display = 'none';
+                document.getElementById('bookCover').value = '';
+                document.getElementById('bookFile').value = '';
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        // Kitap modal kapat
+        function closeBookModal() {
+            document.getElementById('bookModal').style.display = 'none';
+            document.getElementById('uploadProgress').style.display = 'none';
+            document.getElementById('progressFill').style.width = '0%';
+        }
+
+        // Resim yükleme
+        function handleImageUpload(input, previewId) {
+            const file = input.files[0];
+            const preview = document.getElementById(previewId);
+            
+            if (file) {
+                // Dosya boyutu kontrolü (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Dosya boyutu 5MB\'dan küçük olmalıdır!');
+                    input.value = '';
+                    return;
+                }
+                
+                // Dosya türü kontrolü
+                if (!file.type.startsWith('image/')) {
+                    alert('Sadece resim dosyaları yükleyebilirsiniz!');
+                    input.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64 = e.target.result;
+                    document.getElementById('bookCover').value = base64;
+                    
+                    preview.innerHTML = `
+                        <img src="${base64}" style="max-width: 200px; max-height: 200px; border-radius: 10px; object-fit: cover; border: 2px solid #9333ea;">
+                        <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">✅ Resim yüklendi</p>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.innerHTML = '';
+                document.getElementById('bookCover').value = '';
+            }
+        }
+
+        // PDF yükleme
+        async function handlePdfUpload(input) {
+            const file = input.files[0];
+            const preview = document.getElementById('pdfPreview');
+            const progress = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            if (file) {
+                // Dosya boyutu kontrolü (50MB)
+                if (file.size > 50 * 1024 * 1024) {
+                    alert('PDF dosyası 50MB\'dan küçük olmalıdır!');
+                    input.value = '';
+                    return;
+                }
+                
+                // Dosya türü kontrolü
+                if (file.type !== 'application/pdf') {
+                    alert('Sadece PDF dosyaları yükleyebilirsiniz!');
+                    input.value = '';
+                    return;
+                }
+                
+                // Yükleme başlangıcı
+                progress.style.display = 'block';
+                preview.style.display = 'none';
+                progressFill.style.width = '0%';
+                progressText.textContent = 'PDF yükleniyor...';
+                
+                try {
+                    // Simülasyon için progress bar animasyonu
+                    let progressValue = 0;
+                    const progressInterval = setInterval(() => {
+                        progressValue += Math.random() * 20;
+                        if (progressValue > 90) progressValue = 90;
+                        progressFill.style.width = progressValue + '%';
+                    }, 100);
+                    
+                    // Supabase'e PDF yükle
+                    const pdfUrl = await uploadPDF(file);
+                    
+                    clearInterval(progressInterval);
+                    
+                    if (pdfUrl) {
+                        // Yükleme başarılı
+                        progressFill.style.width = '100%';
+                        progressText.textContent = 'PDF başarıyla yüklendi!';
+                        
+                        document.getElementById('bookFile').value = pdfUrl;
+                        
+                        setTimeout(() => {
+                            progress.style.display = 'none';
+                            preview.style.display = 'block';
+                            preview.innerHTML = `
+                                <p style="color: #047857; font-weight: 600;">✅ PDF başarıyla yüklendi</p>
+                                <p style="color: #666; font-size: 0.9rem;">${file.name}</p>
+                                <a href="${pdfUrl}" target="_blank" style="color: #9333ea;">PDF'i görüntüle</a>
+                            `;
+                        }, 1000);
+                    } else {
+                        throw new Error('PDF yükleme başarısız');
+                    }
+                } catch (error) {
+                    console.error('PDF yükleme hatası:', error);
+                    progress.style.display = 'none';
+                    alert('PDF yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
+                    input.value = '';
+                }
+            } else {
+                preview.style.display = 'none';
+                document.getElementById('bookFile').value = '';
+            }
+        }
+
+        // Kitap kaydet
+        document.getElementById('bookForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('bookTitle').value;
+            const author = document.getElementById('bookAuthor').value;
+            const description = document.getElementById('bookDescription').value;
+            const cover = document.getElementById('bookCover').value;
+            
+            // PDF dosyası veya bağlantısı
+            let pdfFile = '';
+            const pdfOption = document.querySelector('input[name="pdfOption"]:checked').value;
+            
+            if (pdfOption === 'file') {
+                pdfFile = document.getElementById('bookFile').value;
+            } else {
+                pdfFile = document.getElementById('bookPdfLink').value;
+            }
+            
+            const bookData = {
+                title,
+                author,
+                description,
+                cover_image_url: cover,
+                file_url: pdfFile,
+                created_at: new Date().toISOString()
+            };
+            
+            try {
+                if (editingBookId) {
+                    // Güncelleme
+                    await updateBook(editingBookId, bookData);
+                    alert('Kitap başarıyla güncellendi!');
+                } else {
+                    // Yeni ekleme
+                    await addBook(bookData);
+                    alert('Kitap başarıyla eklendi!');
+                }
+                
+                closeBookModal();
+                loadBooks();
+            } catch (error) {
+                console.error('Kitap kaydetme hatası:', error);
+                alert('Kitap kaydedilirken bir hata oluştu!');
+            }
+        });
+
+        // Kitap düzenle
+        function editBook(bookId) {
+            const book = books.find(b => (b.id || b.title) === bookId);
+            if (book) {
+                openBookModal(book);
+            }
+        }
+
+        // Kitap sil
+        async function deleteBook(bookId) {
+            if (confirm('Bu kitabı silmek istediğinizden emin misiniz?')) {
+                try {
+                    await deleteBook(bookId);
+                    alert('Kitap başarıyla silindi!');
+                    loadBooks();
+                } catch (error) {
+                    console.error('Kitap silme hatası:', error);
+                    alert('Kitap silinirken bir hata oluştu!');
+                }
+            }
+        }
+
+        // Modal dışına tıklanınca kapanma
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dosya Yükleme Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #f8e1ff 0%, #ffffff 50%, #e1c9ff 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.15);
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px solid #e1c9ff;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+        .test-section h3 {
+            color: #9333ea;
+            margin-top: 0;
+            border-bottom: 2px solid #e1c9ff;
+            padding-bottom: 10px;
+        }
+        .file-input-container {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px dashed #9333ea;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .file-input-container:hover {
+            background: #f8f4ff;
+            border-color: #ec4899;
+        }
+        .file-input {
+            margin: 10px 0;
+            padding: 10px;
+            border: 2px solid #e1c9ff;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 10px;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #9333ea;
+            border: 2px solid #9333ea;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #9333ea;
+            background: #f0f9ff;
+        }
+        .result.success {
+            border-left-color: #10b981;
+            background: #ecfdf5;
+        }
+        .result.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        .file-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+        }
+        .preview-image {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px;
+            border: 2px solid #e1c9ff;
+            border-radius: 10px;
+        }
+        .stats {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .stats h4 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: #9333ea; text-align: center; margin-bottom: 30px;">
+            🧪 Geliştirilmiş Dosya Yükleme Test Sistemi
+        </h1>
+
+        <!-- İstatistikler -->
+        <div class="stats">
+            <h4>📊 Yükleme Performans İstatistikleri</h4>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalUploads">0</div>
+                    <div class="stat-label">Toplam Yükleme</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="successfulUploads">0</div>
+                    <div class="stat-label">Başarılı</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="failedUploads">0</div>
+                    <div class="stat-label">Başarısız</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="totalSize">0</div>
+                    <div class="stat-label">Toplam Boyut (MB)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resim Yükleme Testi -->
+        <div class="test-section">
+            <h3>🖼️ Resim Yükleme Testi (Yeni Sınır: 50MB)</h3>
+            <div class="file-input-container">
+                <p><strong>Desteklenen Formatlar:</strong> JPG, PNG, GIF, WebP, BMP</p>
+                <p><strong>Maksimum Boyut:</strong> 50MB</p>
+                <input type="file" id="imageFile" class="file-input" accept="image/*">
+                <br>
+                <button class="btn btn-primary" onclick="testImageUpload()" id="uploadImageBtn">
+                    📤 Resim Yükle
+                </button>
+                <button class="btn btn-secondary" onclick="clearImageTest()">
+                    🗑️ Temizle
+                </button>
+            </div>
+            <div id="imageResult"></div>
+            <div id="imagePreview"></div>
+        </div>
+
+        <!-- PDF Yükleme Testi -->
+        <div class="test-section">
+            <h3>📚 PDF Kitap Yükleme Testi (Yeni Sınır: 100MB)</h3>
+            <div class="file-input-container">
+                <p><strong>Desteklenen Format:</strong> PDF</p>
+                <p><strong>Maksimum Boyut:</strong> 100MB</p>
+                <input type="file" id="pdfFile" class="file-input" accept=".pdf">
+                <br>
+                <button class="btn btn-primary" onclick="testPDFUpload()" id="uploadPDFBtn">
+                    📤 PDF Yükle
+                </button>
+                <button class="btn btn-secondary" onclick="clearPDFTest()">
+                    🗑️ Temizle
+                </button>
+            </div>
+            <div id="pdfResult"></div>
+        </div>
+
+        <!-- Toplu Test -->
+        <div class="test-section">
+            <h3>⚡ Toplu Test Araçları</h3>
+            <div style="text-align: center;">
+                <button class="btn btn-primary" onclick="stressTest()">
+                    🏋️ Stress Test (5 Küçük Dosya)
+                </button>
+                <button class="btn btn-secondary" onclick="clearAllTests()">
+                    🧹 Tüm Testleri Temizle
+                </button>
+                <button class="btn btn-secondary" onclick="showStats()">
+                    📈 Detaylı İstatistikler
+                </button>
+            </div>
+        </div>
+
+        <!-- Test Geçmişi -->
+        <div class="test-section">
+            <h3>📝 Test Geçmişi</h3>
+            <div id="testHistory"></div>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script>
+        // İstatistik değişkenleri
+        let stats = {
+            total: 0,
+            successful: 0,
+            failed: 0,
+            totalSize: 0
+        };
+        
+        let testHistory = [];
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSupabase();
+            updateStats();
+        });
+
+        // Resim yükleme testi
+        async function testImageUpload() {
+            const fileInput = document.getElementById('imageFile');
+            const file = fileInput.files[0];
+            const resultDiv = document.getElementById('imageResult');
+            const previewDiv = document.getElementById('imagePreview');
+            const uploadBtn = document.getElementById('uploadImageBtn');
+
+            if (!file) {
+                showResult(resultDiv, 'Lütfen bir resim dosyası seçin.', 'error');
+                return;
+            }
+
+            // Dosya bilgileri
+            showFileInfo(resultDiv, file, 'image');
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Yükleniyor...';
+
+            try {
+                const startTime = Date.now();
+                const url = await uploadImage(file, 'test-images');
+                const endTime = Date.now();
+                const duration = (endTime - startTime) / 1000;
+
+                if (url) {
+                    stats.successful++;
+                    stats.totalSize += file.size / 1024 / 1024;
+                    
+                    showResult(resultDiv, `✅ Başarılı! Süre: ${duration.toFixed(2)}s`, 'success');
+                    showImagePreview(previewDiv, url);
+                    
+                    addToHistory('Resim', file.name, file.size, 'Başarılı', duration);
+                } else {
+                    stats.failed++;
+                    showResult(resultDiv, '❌ Yükleme başarısız!', 'error');
+                    addToHistory('Resim', file.name, file.size, 'Başarısız', duration);
+                }
+            } catch (error) {
+                stats.failed++;
+                showResult(resultDiv, `❌ Hata: ${error.message}`, 'error');
+                addToHistory('Resim', file.name, file.size, 'Hata', 0);
+            }
+
+            stats.total++;
+            updateStats();
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = '📤 Resim Yükle';
+        }
+
+        // PDF yükleme testi
+        async function testPDFUpload() {
+            const fileInput = document.getElementById('pdfFile');
+            const file = fileInput.files[0];
+            const resultDiv = document.getElementById('pdfResult');
+            const uploadBtn = document.getElementById('uploadPDFBtn');
+
+            if (!file) {
+                showResult(resultDiv, 'Lütfen bir PDF dosyası seçin.', 'error');
+                return;
+            }
+
+            showFileInfo(resultDiv, file, 'pdf');
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Yükleniyor...';
+
+            try {
+                const startTime = Date.now();
+                const url = await uploadPDF(file);
+                const endTime = Date.now();
+                const duration = (endTime - startTime) / 1000;
+
+                if (url) {
+                    stats.successful++;
+                    stats.totalSize += file.size / 1024 / 1024;
+                    
+                    showResult(resultDiv, `✅ Başarılı! Süre: ${duration.toFixed(2)}s`, 'success');
+                    addToHistory('PDF', file.name, file.size, 'Başarılı', duration);
+                } else {
+                    stats.failed++;
+                    showResult(resultDiv, '❌ Yükleme başarısız!', 'error');
+                    addToHistory('PDF', file.name, file.size, 'Başarısız', duration);
+                }
+            } catch (error) {
+                stats.failed++;
+                showResult(resultDiv, `❌ Hata: ${error.message}`, 'error');
+                addToHistory('PDF', file.name, file.size, 'Hata', 0);
+            }
+
+            stats.total++;
+            updateStats();
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = '📤 PDF Yükle';
+        }
+
+        // Stress test
+        async function stressTest() {
+            alert('Stress test başlatılıyor. 5 adet küçük test dosyası oluşturulup yüklenecek.');
+            
+            for (let i = 1; i <= 5; i++) {
+                // Test için küçük blob dosyası oluştur
+                const canvas = document.createElement('canvas');
+                canvas.width = 100;
+                canvas.height = 100;
+                const ctx = canvas.getContext('2d');
+                
+                // Rastgele renk ve metin
+                ctx.fillStyle = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                ctx.fillRect(0, 0, 100, 100);
+                ctx.fillStyle = 'white';
+                ctx.font = '20px Arial';
+                ctx.fillText(`Test ${i}`, 25, 55);
+                
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], `stress-test-${i}.png`, { type: 'image/png' });
+                    
+                    try {
+                        const url = await uploadImage(file, 'stress-test');
+                        if (url) {
+                            stats.successful++;
+                            stats.totalSize += file.size / 1024 / 1024;
+                            addToHistory('Stress Test', file.name, file.size, 'Başarılı', 0);
+                        } else {
+                            stats.failed++;
+                            addToHistory('Stress Test', file.name, file.size, 'Başarısız', 0);
+                        }
+                    } catch (error) {
+                        stats.failed++;
+                        addToHistory('Stress Test', file.name, file.size, 'Hata', 0);
+                    }
+                    
+                    stats.total++;
+                    updateStats();
+                    updateTestHistory();
+                });
+            }
+        }
+
+        // Yardımcı fonksiyonlar
+        function showResult(element, message, type) {
+            element.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        function showFileInfo(element, file, type) {
+            const sizeInMB = (file.size / 1024 / 1024).toFixed(2);
+            const info = `
+                <div class="file-info">
+                    <strong>📄 Dosya Bilgileri:</strong><br>
+                    📝 İsim: ${file.name}<br>
+                    📊 Boyut: ${sizeInMB} MB<br>
+                    🔖 Tür: ${file.type}<br>
+                    📅 Son Değişiklik: ${new Date(file.lastModified).toLocaleString('tr-TR')}
+                </div>
+            `;
+            element.innerHTML = info;
+        }
+
+        function showImagePreview(element, url) {
+            element.innerHTML = `
+                <div style="text-align: center; margin-top: 15px;">
+                    <p><strong>✅ Yüklenmiş Resim:</strong></p>
+                    <img src="${url}" class="preview-image" alt="Yüklenmiş resim">
+                    <br>
+                    <a href="${url}" target="_blank" class="btn btn-secondary" style="margin-top: 10px;">
+                        🔗 Tam Boyutta Aç
+                    </a>
+                </div>
+            `;
+        }
+
+        function updateStats() {
+            document.getElementById('totalUploads').textContent = stats.total;
+            document.getElementById('successfulUploads').textContent = stats.successful;
+            document.getElementById('failedUploads').textContent = stats.failed;
+            document.getElementById('totalSize').textContent = stats.totalSize.toFixed(2);
+        }
+
+        function addToHistory(type, fileName, fileSize, status, duration) {
+            testHistory.unshift({
+                type,
+                fileName,
+                fileSize,
+                status,
+                duration,
+                timestamp: new Date()
+            });
+            
+            // En fazla 20 kayıt tut
+            if (testHistory.length > 20) {
+                testHistory = testHistory.slice(0, 20);
+            }
+            
+            updateTestHistory();
+        }
+
+        function updateTestHistory() {
+            const historyDiv = document.getElementById('testHistory');
+            
+            if (testHistory.length === 0) {
+                historyDiv.innerHTML = '<p style="text-align: center; color: #666;">Henüz test yapılmadı.</p>';
+                return;
+            }
+
+            let historyHTML = '<div style="max-height: 300px; overflow-y: auto;">';
+            
+            testHistory.forEach((item, index) => {
+                const statusIcon = item.status === 'Başarılı' ? '✅' : item.status === 'Başarısız' ? '❌' : '⚠️';
+                const sizeInMB = (item.fileSize / 1024 / 1024).toFixed(2);
+                
+                historyHTML += `
+                    <div style="background: ${index % 2 === 0 ? '#f8f9fa' : 'white'}; padding: 10px; border-radius: 5px; margin-bottom: 5px; border-left: 3px solid ${item.status === 'Başarılı' ? '#10b981' : '#ef4444'};">
+                        ${statusIcon} <strong>${item.type}</strong> - ${item.fileName} (${sizeInMB} MB)<br>
+                        <small>⏱️ ${item.timestamp.toLocaleTimeString('tr-TR')} | 
+                        ${item.duration > 0 ? `⚡ ${item.duration.toFixed(2)}s` : ''}</small>
+                    </div>
+                `;
+            });
+            
+            historyHTML += '</div>';
+            historyDiv.innerHTML = historyHTML;
+        }
+
+        function clearImageTest() {
+            document.getElementById('imageFile').value = '';
+            document.getElementById('imageResult').innerHTML = '';
+            document.getElementById('imagePreview').innerHTML = '';
+        }
+
+        function clearPDFTest() {
+            document.getElementById('pdfFile').value = '';
+            document.getElementById('pdfResult').innerHTML = '';
+        }
+
+        function clearAllTests() {
+            clearImageTest();
+            clearPDFTest();
+            stats = { total: 0, successful: 0, failed: 0, totalSize: 0 };
+            testHistory = [];
+            updateStats();
+            updateTestHistory();
+        }
+
+        function showStats() {
+            const successRate = stats.total > 0 ? ((stats.successful / stats.total) * 100).toFixed(1) : 0;
+            alert(`📊 Detaylı İstatistikler:
+
+✅ Başarı Oranı: ${successRate}%
+📊 Toplam Test: ${stats.total}
+✅ Başarılı: ${stats.successful}
+❌ Başarısız: ${stats.failed}
+💾 Toplam Yüklenen: ${stats.totalSize.toFixed(2)} MB
+⏱️ Ortalama Dosya Boyutu: ${stats.total > 0 ? (stats.totalSize / stats.total).toFixed(2) : 0} MB`);
+        }
+    </script>
+</body>
+</html>

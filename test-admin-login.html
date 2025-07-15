@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Giriş Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f8e1ff 0%, #e1c9ff 100%);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.2);
+        }
+        h1 {
+            color: #9333ea;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        button {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1.1rem;
+            margin: 1rem 0;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(147, 51, 234, 0.3);
+        }
+        .info {
+            background: #e1f5fe;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            color: #0277bd;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Admin Giriş Test</h1>
+        
+        <div class="info">
+            Bu test sayfasında admin girişi yaparak 2FA sistemini test edebilirsiniz.
+        </div>
+        
+        <button onclick="testAdminLogin()">
+            🚀 Admin Girişi Test Et
+        </button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSupabase();
+        });
+
+        async function testAdminLogin() {
+            const email = 'gelmemeyegidenkitapkurdu@gmail.com';
+            const password = 'Elif.6628.Akin';
+            
+            try {
+                document.getElementById('result').innerHTML = '<p style="color: #9333ea;">🔄 Test başlıyor...</p>';
+                
+                // 1. Admin giriş kontrol
+                console.log('1. Admin bilgileri kontrol ediliyor...');
+                const loginResult = await loginAsAdmin(email, password);
+                
+                if (!loginResult.success) {
+                    document.getElementById('result').innerHTML = '<p style="color: #dc2626;">❌ Admin bilgileri hatalı!</p>';
+                    return;
+                }
+                
+                document.getElementById('result').innerHTML = '<p style="color: #059669;">✅ Admin bilgileri doğru!</p><p style="color: #9333ea;">📧 Email kodu gönderiliyor...</p>';
+                
+                // 2. Email kod gönder
+                console.log('2. Email kodu gönderiliyor...');
+                const codeResult = await sendAdminVerificationCode(email);
+                
+                if (!codeResult.success) {
+                    document.getElementById('result').innerHTML = '<p style="color: #dc2626;">❌ Email kodu gönderilemedi: ' + codeResult.error + '</p>';
+                    return;
+                }
+                
+                document.getElementById('result').innerHTML = '<p style="color: #059669;">✅ Email kodu gönderildi!</p>';
+                
+                // Test modunda kodu göster
+                if (codeResult.test_code) {
+                    const userCode = prompt('⚠️ TEST MODU\\n\\nOluşturulan kod: ' + codeResult.test_code + '\\n\\nLütfen bu kodu aşağıdaki alana girin:');
+                    
+                    if (userCode && userCode.length === 6) {
+                        document.getElementById('result').innerHTML += '<p style="color: #9333ea;">🔍 Kod doğrulanıyor...</p>';
+                        
+                        // 3. Kod doğrula
+                        const verifyResult = await verifyAdminCode(email, userCode);
+                        
+                        if (verifyResult.success) {
+                            document.getElementById('result').innerHTML += '<p style="color: #059669;">🎉 Kod doğrulaması başarılı!</p><p style="color: #059669;">✅ 2FA sistemi çalışıyor!</p>';
+                        } else {
+                            document.getElementById('result').innerHTML += '<p style="color: #dc2626;">❌ Kod doğrulanamadı: ' + verifyResult.error + '</p>';
+                        }
+                    } else {
+                        document.getElementById('result').innerHTML += '<p style="color: #dc2626;">❌ Geçerli kod girilmedi!</p>';
+                    }
+                } else {
+                    document.getElementById('result').innerHTML += '<p style="color: #f59e0b;">⚠️ Test kodu bulunamadı. Gerçek email kontrol edin.</p>';
+                }
+                
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<p style="color: #dc2626;">💥 Hata: ' + error.message + '</p>';
+                console.error('Test error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

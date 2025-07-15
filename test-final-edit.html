@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Düzenleme Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Final taslak röportaj düzenleme testi</h1>
+    <div id="result"></div>
+    
+    <script src="supabase-client.js"></script>
+    <script>
+        async function testFinalEdit() {
+            try {
+                initializeSupabase();
+                
+                console.log('Final test başlıyor...');
+                
+                // Admin girişi yap
+                const loginResult = await loginAsAdmin('gelmemeyegidenkitapkurdu@gmail.com', 'Elif.6628.Akin');
+                
+                if (!loginResult.success) {
+                    document.getElementById('result').innerHTML = `❌ Admin girişi başarısız: ${loginResult.message}`;
+                    return;
+                }
+                
+                console.log('Admin girişi başarılı');
+                
+                // Test güncelleme verisi - sadece status'u taslaktan yayına çevirelim
+                const updatedInterview = {
+                    title: 'Buşra Balçık || Röportaj - Final Test',
+                    description: 'Gümüş Taht serisi ve Zehirli Gölge kitaplarının yazarı Buşra Balçık ile yapılan röportaj - Final Test',
+                    interviewer_name: 'Elif | gelmemeyegidenkitapkurdu',
+                    guest_name: 'Buşra Balçık',
+                    status: 'published' // TASLAKTAN YAYINA ÇEVİRİYORUZ
+                };
+                
+                console.log('Taslak röportaj yayına çevriliyor...', updatedInterview);
+                
+                // Güncelleme işlemi
+                const result = await updateWhatsAppInterview(6, updatedInterview);
+                
+                if (result) {
+                    document.getElementById('result').innerHTML = `
+                        <h2 style="color: green;">✅ BAŞARILI!</h2>
+                        <p><strong>Taslak röportaj başarıyla yayına çevrildi!</strong></p>
+                        <p>Status: draft → published</p>
+                        <pre style="background: #f0f0f0; padding: 10px; border-radius: 5px;">${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                    
+                    // Veritabanından son durumu kontrol edelim
+                    setTimeout(async () => {
+                        try {
+                            const checkData = await getWhatsAppInterview(6);
+                            console.log('Veritabanı kontrolü:', checkData);
+                            
+                            document.getElementById('result').innerHTML += `
+                                <hr>
+                                <h3>Veritabanı Kontrolü:</h3>
+                                <p>Başlık: ${checkData.title}</p>
+                                <p>Status: <strong>${checkData.status}</strong></p>
+                                <p style="color: green;">✅ Güncelleme veritabanına başarıyla yansıdı!</p>
+                            `;
+                        } catch (error) {
+                            console.error('Veritabanı kontrol hatası:', error);
+                        }
+                    }, 2000);
+                    
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <h2 style="color: red;">❌ HATA!</h2>
+                        <p>Taslak röportaj güncellenirken hata oluştu</p>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Final test hatası:', error);
+                document.getElementById('result').innerHTML = `
+                    <h2 style="color: red;">❌ HATA!</h2>
+                    <p>Test sırasında hata: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // Test'i çalıştır
+        testFinalEdit();
+    </script>
+</body>
+</html>

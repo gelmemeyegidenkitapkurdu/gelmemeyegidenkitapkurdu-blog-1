@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hakkımda Admin Test</title>
+</head>
+<body>
+    <h1>Hakkımda admin test başlatılıyor...</h1>
+    <script>
+        // Admin durumunu localStorage'a kaydet
+        localStorage.setItem('isAdminLoggedIn', 'true');
+        localStorage.setItem('adminEmail', 'gelmemeyegidenkitapkurdu@gmail.com');
+        
+        console.log('Admin durumu ayarlandı');
+        
+        // 1 saniye sonra hakkımda sayfasına yönlendir
+        setTimeout(function() {
+            window.location.href = 'hakkimda.html';
+        }, 1000);
+    </script>
+</body>
+</html>
